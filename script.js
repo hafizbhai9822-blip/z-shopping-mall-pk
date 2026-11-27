@@ -1,66 +1,58 @@
 
-let products = [
-  {
-    id: 1,
-    name: "Premium Honey",
-    price: 1500,
-    category: "Honey",
-    image: "https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=500"
-  },
-  {
-    id: 2,
-    name: "Wireless Headphones",
-    price: 2500,
-    category: "Electronics",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500"
-  },
-  {
-    id: 3,
-    name: "Wrist Watch",
-    price: 1800,
-    category: "Fashion",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500"
-  },
-  {
-    id: 4,
-    name: "Travel Bag",
-    price: 2200,
-    category: "Fashion",
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500"
-  }
-];
-
+let products = [];
 let cart = JSON.parse(localStorage.getItem("zmart_cart") || "[]");
 
 function saveCart() {
   localStorage.setItem("zmart_cart", JSON.stringify(cart));
 }
 
-function showProducts(list = products) {
+async function showProducts(list = products) {
   const container = document.getElementById("products");
   if (!container) return;
 
-  container.innerHTML = list.map(product => `
+  if (list.length === 0) {
+    container.innerHTML = "<p>No products found.</p>";
+    return;
+  }
+
+  container.innerHTML = list.map(p => `
     <div class="product-card">
-      <img src="${product.image}" alt="${product.name}">
-      <h3>${product.name}</h3>
-      <p>Rs. ${product.price.toLocaleString()}</p>
-      <button onclick="addToCart(${product.id})">
-        Add to Cart
-      </button>
+      <img src="${p.image_url || 'https://placehold.co/400x300?text=Product'}" alt="${p.name}">
+      <h3>${escapeHTML(p.name)}</h3>
+      <p>Rs. ${Number(p.price).toLocaleString()}</p>
+      <button onclick="addToCart(${p.id})">Add to Cart</button>
     </div>
   `).join("");
 }
 
+async function loadProducts() {
+  const container = document.getElementById("products");
+  if (container) container.innerHTML = "<p>Loading products...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("products")
+    .select("id,name,description,price,image_url,category_id,stock")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (container) container.innerHTML = "<p>Products could not load.</p>";
+    console.error(error);
+    return;
+  }
+
+  products = data || [];
+  showProducts();
+}
+
 function addToCart(id) {
   const product = products.find(p => p.id === id);
+  if (!product) return;
+
   const existing = cart.find(item => item.id === id);
 
-  if (existing) {
-    existing.quantity++;
-  } else {
-    cart.push({...product, quantity: 1});
-  }
+  if (existing) existing.quantity++;
+  else cart.push({...product, quantity: 1});
 
   saveCart();
   updateCart();
@@ -79,36 +71,33 @@ function changeQuantity(id, amount) {
 
   item.quantity += amount;
 
-  if (item.quantity <= 0) {
-    removeFromCart(id);
-  } else {
+  if (item.quantity <= 0) removeFromCart(id);
+  else {
     saveCart();
     updateCart();
   }
 }
 
 function updateCart() {
-  const count = document.getElementById("cart-count");
+  const counts = document.querySelectorAll("#cart-count");
   const total = document.getElementById("cart-total");
   const list = document.getElementById("cart-items");
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const amount = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity, 0
-  );
+  const amount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  if (count) count.innerText = itemCount;
+  counts.forEach(el => el.innerText = itemCount);
   if (total) total.innerText = amount.toLocaleString();
 
   if (list) {
     list.innerHTML = cart.length
       ? cart.map(item => `
         <div class="cart-item">
-          <span>${item.name}</span>
-          <span>Rs. ${item.price.toLocaleString()}</span>
-          <button onclick="changeQuantity(${item.id}, -1)">−</button>
+          <span>${escapeHTML(item.name)}</span>
+          <span>Rs. ${Number(item.price).toLocaleString()}</span>
+          <button onclick="changeQuantity(${item.id},-1)">−</button>
           ${item.quantity}
-          <button onclick="changeQuantity(${item.id}, 1)">+</button>
+          <button onclick="changeQuantity(${item.id},1)">+</button>
           <button onclick="removeFromCart(${item.id})">Remove</button>
         </div>
       `).join("")
@@ -121,58 +110,20 @@ function searchProducts() {
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search) ||
-    p.category.toLowerCase().includes(search)
+    (p.description || "").toLowerCase().includes(search)
   );
 
   showProducts(filtered);
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  }[char]));
+}
 
-  showProducts();
+document.addEventListener("DOMContentLoaded", async function() {
+  await loadProducts();
   updateCart();
-
-  const checkoutForm = document.getElementById("checkout-form");
-
-  if (checkoutForm) {
-    checkoutForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-
-      if (cart.length === 0) {
-        alert("Your cart is empty!");
-        return;
-      }
-
-      const name = document.getElementById("customer-name").value.trim();
-      const phone = document.getElementById("customer-phone").value.trim();
-      const city = document.getElementById("customer-city").value.trim();
-      const address = document.getElementById("customer-address").value.trim();
-
-      const total = cart.reduce(
-        (sum, item) => sum + item.price * item.quantity, 0
-      );
-
-      let message = `New Order - Z.Shopping Mall.pk\n\n`;
-      message += `Customer: ${name}\n`;
-      message += `Phone: ${phone}\n`;
-      message += `City: ${city}\n`;
-      message += `Address: ${address}\n\n`;
-      message += `Products:\n`;
-
-      cart.forEach(item => {
-        message += `${item.name} x ${item.quantity} = Rs. ${item.price * item.quantity}\n`;
-      });
-
-      message += `\nTotal: Rs. ${total}\n`;
-      message += `Payment: Cash on Delivery`;
-
-      const whatsappNumber = "923026790033";
-
-      const whatsappLink =
-        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-      window.open(whatsappLink, "_blank");
-    });
-  }
-
 });
