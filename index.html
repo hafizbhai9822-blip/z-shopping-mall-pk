@@ -2,11 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Z.Shopping Mall.pk | Online Shopping Pakistan</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Z.Shopping Mall.pk</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 </head>
 <body>
@@ -19,24 +19,22 @@
     <a href="#products-section">Products</a>
     <a href="#contact">Contact</a>
   </nav>
-  <div class="cart-icon">
-    🛒 Cart (<span id="cart-count">0</span>)
-  </div>
+  <div class="cart-icon">🛒 Cart (<span id="cart-count">0</span>)</div>
 </header>
 
 <section class="hero" id="home">
   <div class="hero-content">
-    <h1>Everything You Need,<br> All in One Place!</h1>
+    <h1>Everything You Need,<br>All in One Place!</h1>
     <p>Shop Online in Pakistan at Best Prices</p>
     <a href="#products-section" class="shop-btn">Shop Now</a>
   </div>
 </section>
 
 <section class="features">
-  <div>🚚 Free Delivery</div>
+  <div>🚚 Delivery Across Pakistan</div>
   <div>💵 Cash on Delivery</div>
   <div>⭐ Quality Products</div>
-  <div>🔒 Secure Shopping</div>
+  <div>🔒 Safe Shopping</div>
 </section>
 
 <section id="categories">
@@ -53,21 +51,15 @@
 
 <section id="products-section">
   <h2>Our Latest Products</h2>
-  <input
-    type="search"
-    id="search"
-    placeholder="Search products..."
-    oninput="searchProducts()"
-  >
+  <input type="search" id="search"
+    placeholder="Search products..." oninput="searchProducts()">
   <div id="products" class="products"></div>
 </section>
-
 
 <section class="cart-section">
   <h2>Your Shopping Cart 🛒</h2>
   <div id="cart-items"></div>
   <h3>Total Amount: Rs. <span id="cart-total">0</span></h3>
-  <p>Items: <span id="cart-count">0</span></p>
 </section>
 
 <section class="checkout-section" id="checkout">
@@ -77,19 +69,17 @@
     <input type="tel" id="customer-phone" placeholder="Mobile Number" required>
     <input type="text" id="customer-city" placeholder="City" required>
     <textarea id="customer-address" placeholder="Complete Delivery Address" required></textarea>
-
     <h3>Payment Method</h3>
     <p>Cash on Delivery (COD)</p>
-
-    <button type="submit">Place Order</button>
+    <button type="submit">Place Order on WhatsApp</button>
   </form>
 </section>
-
 
 <section id="contact">
   <h2>Contact Us</h2>
   <p>Welcome to Z.Shopping Mall.pk</p>
   <p>Online Shopping Across Pakistan</p>
+  <p>WhatsApp: 03026790033</p>
 </section>
 
 <footer>
