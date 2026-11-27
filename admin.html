@@ -1,65 +1,74 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Z.Shopping Mall.pk Admin</title>
+<title>Z Shopping Mall Admin</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <style>
-body { padding: 30px; }
-.admin-box {
-  max-width: 500px;
-  margin: 40px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 3px 15px #0002;
-}
-input, button {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-}
-button {
-  background: #14213d;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
+body { background:#f1f3f6; padding:20px; }
+.box { background:white; padding:20px; margin:20px auto; max-width:1000px; border-radius:10px; }
+input, textarea, select { width:100%; padding:12px; margin:8px 0; }
+button { background:#14213d; color:white; padding:12px; border:0; border-radius:5px; cursor:pointer; margin:5px; }
+.delete { background:#c62828; }
+.item { border-bottom:1px solid #ddd; padding:15px; }
+#dashboard { display:none; }
 </style>
 </head>
 <body>
 
-<div class="admin-box">
-<h2>Z.Shopping Mall.pk</h2>
-<h3>Admin Login</h3>
-
-<input type="email" id="email" placeholder="Admin Email">
+<div class="box" id="loginBox">
+<h2>Admin Login</h2>
+<input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Password">
-
 <button onclick="login()">Login</button>
-
 <p id="message"></p>
-<div id="dashboard" style="display:none;">
-<h2>Welcome Admin!</h2>
-<p>Admin Login Successful.</p>
+</div>
+
+<div id="dashboard">
+<div class="box">
+<h1>Admin Dashboard</h1>
 <button onclick="logout()">Logout</button>
+</div>
+
+<div class="box">
+<h2>Add Product</h2>
+<input id="pname" placeholder="Product Name">
+<textarea id="pdesc" placeholder="Product Description"></textarea>
+<input id="pprice" type="number" placeholder="Price (Rs.)">
+<input id="pstock" type="number" placeholder="Stock Quantity">
+<input id="pimage" placeholder="Product Image URL">
+<select id="pcategory">
+<option value="">Select Category</option>
+</select>
+<button onclick="addProduct()">Add Product</button>
+<p id="productMessage"></p>
+</div>
+
+<div class="box">
+<h2>Products</h2>
+<div id="productList">Loading...</div>
+</div>
+
+<div class="box">
+<h2>Orders</h2>
+<div id="orderList">Loading...</div>
 </div>
 </div>
 
 <script>
 async function login() {
-  const email = document.getElementById("email").value;
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const message = document.getElementById("message");
 
-  message.innerText = "Logging in...";
+  message.innerText = "Checking...";
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
+    email, password
   });
 
   if (error) {
@@ -75,19 +84,193 @@ async function login() {
 
   if (adminError || !admin) {
     await supabaseClient.auth.signOut();
-    message.innerText = "You are not an authorized admin.";
+    message.innerText = "Admin permission not found.";
     return;
   }
 
-  message.innerText = "Login Successful!";
+  document.getElementById("loginBox").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
+
+  loadCategories();
+  loadProducts();
+  loadOrders();
 }
 
 async function logout() {
   await supabaseClient.auth.signOut();
   location.reload();
 }
-</script>
 
+async function loadCategories() {
+  const { data, error } = await supabaseClient
+    .from("categories")
+    .select("id,name")
+    .eq("is_active", true);
+
+  if (error) {
+    document.getElementById("productMessage").innerText = error.message;
+    return;
+  }
+
+  const select = document.getElementById("pcategory");
+  select.innerHTML = '<option value="">Select Category</option>';
+
+  data.forEach(category => {
+    select.innerHTML += `<option value="${category.id}">${category.name}</option>`;
+  });
+}
+
+async function addProduct() {
+  const name = document.getElementById("pname").value.trim();
+  const description = document.getElementById("pdesc").value.trim();
+  const price = Number(document.getElementById("pprice").value);
+  const stock = Number(document.getElementById("pstock").value);
+  const image = document.getElementById("pimage").value.trim();
+  const category = document.getElementById("pcategory").value;
+  const message = document.getElementById("productMessage");
+
+  if (!name || !price || price < 0 || stock < 0) {
+    message.innerText = "Name, price and stock are required.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("products").insert({
+    name,
+    description,
+    price,
+    stock,
+    image_url: image || null,
+    category_id: category ? Number(category) : null,
+    is_active: true
+  });
+
+  if (error) {
+    message.innerText = error.message;
+    return;
+  }
+
+  message.innerText = "Product added successfully!";
+
+  document.getElementById("pname").value = "";
+  document.getElementById("pdesc").value = "";
+  document.getElementById("pprice").value = "";
+  document.getElementById("pstock").value = "";
+  document.getElementById("pimage").value = "";
+  document.getElementById("pcategory").value = "";
+
+  loadProducts();
+}
+
+async function loadProducts() {
+  const { data, error } = await supabaseClient
+    .from("products")
+    .select("id,name,price,stock,image_url,is_active,categories(name)")
+    .order("created_at", { ascending: false });
+
+  const list = document.getElementById("productList");
+
+  if (error) {
+    list.innerText = error.message;
+    return;
+  }
+
+  if (!data.length) {
+    list.innerHTML = "<p>No products yet.</p>";
+    return;
+  }
+
+  list.innerHTML = data.map(p => `
+    <div class="item">
+      <strong>${escapeHTML(p.name)}</strong>
+      <p>Price: Rs. ${p.price}</p>
+      <p>Stock: ${p.stock}</p>
+      <p>Category: ${escapeHTML(p.categories?.name || "None")}</p>
+      <button class="delete" onclick="deleteProduct(${p.id})">Delete</button>
+    </div>
+  `).join("");
+}
+
+async function deleteProduct(id) {
+  if (!confirm("Delete this product?")) return;
+
+  const { error } = await supabaseClient
+    .from("products")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadProducts();
+}
+
+async function loadOrders() {
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const list = document.getElementById("orderList");
+
+  if (error) {
+    list.innerText = error.message;
+    return;
+  }
+
+  if (!data.length) {
+    list.innerHTML = "<p>No orders yet.</p>";
+    return;
+  }
+
+  list.innerHTML = data.map(o => `
+    <div class="item">
+      <strong>Order: ${o.id}</strong>
+      <p>Customer: ${escapeHTML(o.customer_name)}</p>
+      <p>Phone: ${escapeHTML(o.phone)}</p>
+      <p>City: ${escapeHTML(o.city)}</p>
+      <p>Address: ${escapeHTML(o.address)}</p>
+      <p>Total: Rs. ${o.total}</p>
+      <p>Status: ${escapeHTML(o.status)}</p>
+      <select id="status-${o.id}">
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <button onclick="updateOrder('${o.id}')">Update Status</button>
+    </div>
+  `).join("");
+}
+
+async function updateOrder(id) {
+  const status = document.getElementById("status-" + id).value;
+
+  const { error } = await supabaseClient
+    .from("orders")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Order status updated!");
+  loadOrders();
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+</script>
 </body>
 </html>
