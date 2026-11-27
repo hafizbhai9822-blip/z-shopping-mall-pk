@@ -263,8 +263,17 @@ async function loadOrders() {
         </div>
 
         <h3>Total: Rs. ${Number(o.total).toLocaleString()}</h3>
-        <p><strong>Payment:</strong> ${escapeHTML(o.payment_method)}</p>
-        <p><strong>Status:</strong> ${escapeHTML(o.status)}</p>
+        <p><strong>Payment Method:</strong> ${escapeHTML(o.payment_method)}</p>
+        <p><strong>Payment Status:</strong> ${escapeHTML(o.payment_status || "pending")}</p>
+
+        <label>Update Payment Status</label>
+        <select id="payment-status-${o.id}">
+          <option value="pending" ${o.payment_status === "pending" ? "selected" : ""}>Pending</option>
+          <option value="paid" ${o.payment_status === "paid" ? "selected" : ""}>Paid</option>
+        </select>
+        <button onclick="updatePaymentStatus('${o.id}')">Update Payment</button>
+
+        <p><strong>Order Status:</strong> ${escapeHTML(o.status)}</p>
 
         <label>Update Order Status</label>
         <select id="status-${o.id}">
@@ -278,6 +287,23 @@ async function loadOrders() {
       </div>
     `;
   }).join("");
+}
+
+async function updatePaymentStatus(id) {
+  const paymentStatus = document.getElementById("payment-status-" + id).value;
+
+  const { error } = await supabaseClient
+    .from("orders")
+    .update({ payment_status: paymentStatus })
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Payment status updated!");
+  loadOrders();
 }
 
 async function updateOrder(id) {
