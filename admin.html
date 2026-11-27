@@ -244,7 +244,7 @@ async function loadOrders() {
 
     return `
       <div class="item">
-        <h3>Order: ${escapeHTML(o.id)}</h3>
+        <h3>Order: ${o.order_number}</h3>
         <p><strong>Customer:</strong> ${escapeHTML(o.customer_name)}</p>
         <p><strong>Phone:</strong> ${escapeHTML(o.phone)}</p>
         <p><strong>City:</strong> ${escapeHTML(o.city)}</p>
