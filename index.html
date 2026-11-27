@@ -32,7 +32,7 @@
 
 <section class="features">
   <div>🚚 Delivery Across Pakistan</div>
-  <div>💵 Cash on Delivery</div>
+  <div>💵 Multiple Payment Methods</div>
   <div>⭐ Quality Products</div>
   <div>🔒 Safe Shopping</div>
 </section>
@@ -65,12 +65,35 @@
 <section class="checkout-section" id="checkout">
   <h2>Checkout</h2>
   <form id="checkout-form">
-    <input type="text" id="customer-name" placeholder="Full Name" required>
-    <input type="tel" id="customer-phone" placeholder="Mobile Number" required>
-    <input type="text" id="customer-city" placeholder="City" required>
-    <textarea id="customer-address" placeholder="Complete Delivery Address" required></textarea>
+
+    <input type="text" id="customer-name"
+      placeholder="Full Name" required>
+
+    <input type="tel" id="customer-phone"
+      placeholder="Mobile Number" required>
+
+    <input type="text" id="customer-city"
+      placeholder="City" required>
+
+    <textarea id="customer-address"
+      placeholder="Complete Delivery Address" required></textarea>
+
     <h3>Payment Method</h3>
-    <p>Cash on Delivery (COD)</p>
+
+    <select id="payment-method" required>
+      <option value="COD">Cash on Delivery</option>
+      <option value="Easypaisa">Easypaisa</option>
+      <option value="JazzCash">JazzCash</option>
+      <option value="Bank Transfer">MCB Bank Transfer</option>
+    </select>
+
+    <div id="payment-details" style="display:none; margin:15px 0; padding:15px; border:1px solid #ddd; border-radius:8px;">
+      <h3 id="payment-title"></h3>
+      <p id="payment-account"></p>
+      <p><strong>Account Title:</strong> Muhammad Zubair</p>
+      <p>ادائیگی کرنے کے بعد رسید محفوظ رکھیں۔</p>
+    </div>
+
     <button type="submit">Place Order on WhatsApp</button>
   </form>
 </section>
@@ -86,6 +109,47 @@
   <h3>Z.Shopping Mall.pk</h3>
   <p>© 2026 Z.Shopping Mall.pk. All Rights Reserved.</p>
 </footer>
+
+<script>
+const paymentMethod = document.getElementById("payment-method");
+const paymentDetails = document.getElementById("payment-details");
+const paymentTitle = document.getElementById("payment-title");
+const paymentAccount = document.getElementById("payment-account");
+
+function showPaymentDetails() {
+  const method = paymentMethod.value;
+
+  const accounts = {
+    "COD": null,
+    "Easypaisa": {
+      title: "Easypaisa Payment",
+      account: "Account Number: 03026790033"
+    },
+    "JazzCash": {
+      title: "JazzCash Payment",
+      account: "Account Number: 03026790033"
+    },
+    "Bank Transfer": {
+      title: "MCB Bank Limited",
+      account: "Account Number: 1730592991004169"
+    }
+  };
+
+  const details = accounts[method];
+
+  if (!details) {
+    paymentDetails.style.display = "none";
+    return;
+  }
+
+  paymentTitle.textContent = details.title;
+  paymentAccount.textContent = details.account;
+  paymentDetails.style.display = "block";
+}
+
+paymentMethod.addEventListener("change", showPaymentDetails);
+showPaymentDetails();
+</script>
 
 <script src="script.js"></script>
 </body>
