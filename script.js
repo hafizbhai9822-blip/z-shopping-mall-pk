@@ -185,10 +185,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      const orderId = data;
+      const orderId = data.id;
+      const orderNumber = data.order_number;
 
       let message = `New Order - Z.Shopping Mall.pk\n`;
-      message += `Order Number: ${orderId}\n`;
+      message += `Order Number: ${orderNumber}\n`;
       message += `Customer: ${name}\nPhone: ${phone}\n`;
       message += `City: ${city}\nAddress: ${address}\n\nProducts:\n`;
 
@@ -206,7 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateCart();
       form.reset();
 
-      alert("Your order has been saved successfully!");
+      alert("Your order has been saved successfully! Order Number: " + orderNumber);
       window.open(whatsappLink, "_blank");
     });
   }
