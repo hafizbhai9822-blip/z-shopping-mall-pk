@@ -15,6 +15,8 @@ input, textarea, select { width:100%; padding:12px; margin:8px 0; }
 button { background:#14213d; color:white; padding:12px; border:0; border-radius:5px; cursor:pointer; margin:5px; }
 .delete { background:#c62828; }
 .item { border-bottom:1px solid #ddd; padding:15px; }
+.order-products { background:#f5f7fa; padding:12px; border-radius:8px; margin:10px 0; }
+.order-product { padding:8px 0; border-bottom:1px solid #ddd; }
 #dashboard { display:none; }
 </style>
 </head>
@@ -116,7 +118,10 @@ async function loadCategories() {
   select.innerHTML = '<option value="">Select Category</option>';
 
   data.forEach(category => {
-    select.innerHTML += `<option value="${category.id}">${category.name}</option>`;
+    const option = document.createElement("option");
+    option.value = category.id;
+    option.textContent = category.name;
+    select.appendChild(option);
   });
 }
 
@@ -151,12 +156,9 @@ async function addProduct() {
 
   message.innerText = "Product added successfully!";
 
-  document.getElementById("pname").value = "";
-  document.getElementById("pdesc").value = "";
-  document.getElementById("pprice").value = "";
-  document.getElementById("pstock").value = "";
-  document.getElementById("pimage").value = "";
-  document.getElementById("pcategory").value = "";
+  ["pname","pdesc","pprice","pstock","pimage","pcategory"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
 
   loadProducts();
 }
@@ -182,7 +184,7 @@ async function loadProducts() {
   list.innerHTML = data.map(p => `
     <div class="item">
       <strong>${escapeHTML(p.name)}</strong>
-      <p>Price: Rs. ${p.price}</p>
+      <p>Price: Rs. ${Number(p.price).toLocaleString()}</p>
       <p>Stock: ${p.stock}</p>
       <p>Category: ${escapeHTML(p.categories?.name || "None")}</p>
       <button class="delete" onclick="deleteProduct(${p.id})">Delete</button>
@@ -207,42 +209,75 @@ async function deleteProduct(id) {
 }
 
 async function loadOrders() {
-  const { data, error } = await supabaseClient
+  const list = document.getElementById("orderList");
+  list.innerText = "Loading orders...";
+
+  const { data: orders, error } = await supabaseClient
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false });
-
-  const list = document.getElementById("orderList");
 
   if (error) {
     list.innerText = error.message;
     return;
   }
 
-  if (!data.length) {
+  if (!orders.length) {
     list.innerHTML = "<p>No orders yet.</p>";
     return;
   }
 
-  list.innerHTML = data.map(o => `
-    <div class="item">
-      <strong>Order: ${o.id}</strong>
-      <p>Customer: ${escapeHTML(o.customer_name)}</p>
-      <p>Phone: ${escapeHTML(o.phone)}</p>
-      <p>City: ${escapeHTML(o.city)}</p>
-      <p>Address: ${escapeHTML(o.address)}</p>
-      <p>Total: Rs. ${o.total}</p>
-      <p>Status: ${escapeHTML(o.status)}</p>
-      <select id="status-${o.id}">
-        <option value="pending">Pending</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="shipped">Shipped</option>
-        <option value="delivered">Delivered</option>
-        <option value="cancelled">Cancelled</option>
-      </select>
-      <button onclick="updateOrder('${o.id}')">Update Status</button>
-    </div>
-  `).join("");
+  const orderIds = orders.map(o => o.id);
+
+  const { data: items, error: itemsError } = await supabaseClient
+    .from("order_items")
+    .select("order_id,product_name,quantity,unit_price,subtotal")
+    .in("order_id", orderIds);
+
+  if (itemsError) {
+    list.innerText = "Order products could not load: " + itemsError.message;
+    return;
+  }
+
+  list.innerHTML = orders.map(o => {
+    const orderItems = items.filter(item => item.order_id === o.id);
+
+    return `
+      <div class="item">
+        <h3>Order: ${escapeHTML(o.id)}</h3>
+        <p><strong>Customer:</strong> ${escapeHTML(o.customer_name)}</p>
+        <p><strong>Phone:</strong> ${escapeHTML(o.phone)}</p>
+        <p><strong>City:</strong> ${escapeHTML(o.city)}</p>
+        <p><strong>Address:</strong> ${escapeHTML(o.address)}</p>
+
+        <h4>Ordered Products</h4>
+        <div class="order-products">
+          ${orderItems.length ? orderItems.map(item => `
+            <div class="order-product">
+              <strong>${escapeHTML(item.product_name)}</strong>
+              <p>Quantity: ${item.quantity}</p>
+              <p>Price: Rs. ${Number(item.unit_price).toLocaleString()}</p>
+              <p>Subtotal: Rs. ${Number(item.subtotal).toLocaleString()}</p>
+            </div>
+          `).join("") : "<p>No product details found.</p>"}
+        </div>
+
+        <h3>Total: Rs. ${Number(o.total).toLocaleString()}</h3>
+        <p><strong>Payment:</strong> ${escapeHTML(o.payment_method)}</p>
+        <p><strong>Status:</strong> ${escapeHTML(o.status)}</p>
+
+        <label>Update Order Status</label>
+        <select id="status-${o.id}">
+          <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
+          <option value="confirmed" ${o.status === "confirmed" ? "selected" : ""}>Confirmed</option>
+          <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>Shipped</option>
+          <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
+          <option value="cancelled" ${o.status === "cancelled" ? "selected" : ""}>Cancelled</option>
+        </select>
+        <button onclick="updateOrder('${o.id}')">Update Status</button>
+      </div>
+    `;
+  }).join("");
 }
 
 async function updateOrder(id) {
