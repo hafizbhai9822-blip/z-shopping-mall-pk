@@ -30,13 +30,17 @@ let products = [
   }
 ];
 
-let cart = [];
+let cart = JSON.parse(localStorage.getItem("zmart_cart") || "[]");
 
-function showProducts() {
+function saveCart() {
+  localStorage.setItem("zmart_cart", JSON.stringify(cart));
+}
+
+function showProducts(list = products) {
   const container = document.getElementById("products");
   if (!container) return;
 
-  container.innerHTML = products.map(product => `
+  container.innerHTML = list.map(product => `
     <div class="product-card">
       <img src="${product.image}" alt="${product.name}">
       <h3>${product.name}</h3>
@@ -50,17 +54,65 @@ function showProducts() {
 
 function addToCart(id) {
   const product = products.find(p => p.id === id);
-  cart.push(product);
+  const existing = cart.find(item => item.id === id);
+
+  if (existing) {
+    existing.quantity++;
+  } else {
+    cart.push({...product, quantity: 1});
+  }
+
+  saveCart();
   updateCart();
+  alert("Product added to cart!");
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(item => item.id !== id);
+  saveCart();
+  updateCart();
+}
+
+function changeQuantity(id, amount) {
+  const item = cart.find(p => p.id === id);
+  if (!item) return;
+
+  item.quantity += amount;
+
+  if (item.quantity <= 0) {
+    removeFromCart(id);
+  } else {
+    saveCart();
+    updateCart();
+  }
 }
 
 function updateCart() {
   const count = document.getElementById("cart-count");
   const total = document.getElementById("cart-total");
+  const list = document.getElementById("cart-items");
 
-  if (count) count.innerText = cart.length;
-  if (total) {
-    total.innerText = cart.reduce((sum, item) => sum + item.price, 0);
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const amount = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity, 0
+  );
+
+  if (count) count.innerText = itemCount;
+  if (total) total.innerText = amount.toLocaleString();
+
+  if (list) {
+    list.innerHTML = cart.length
+      ? cart.map(item => `
+        <div class="cart-item">
+          <span>${item.name}</span>
+          <span>Rs. ${item.price.toLocaleString()}</span>
+          <button onclick="changeQuantity(${item.id}, -1)">−</button>
+          ${item.quantity}
+          <button onclick="changeQuantity(${item.id}, 1)">+</button>
+          <button onclick="removeFromCart(${item.id})">Remove</button>
+        </div>
+      `).join("")
+      : "<p>Your cart is empty.</p>";
   }
 }
 
@@ -72,14 +124,10 @@ function searchProducts() {
     p.category.toLowerCase().includes(search)
   );
 
-  document.getElementById("products").innerHTML = filtered.map(product => `
-    <div class="product-card">
-      <img src="${product.image}" alt="${product.name}">
-      <h3>${product.name}</h3>
-      <p>Rs. ${product.price.toLocaleString()}</p>
-      <button onclick="addToCart(${product.id})">Add to Cart</button>
-    </div>
-  `).join("");
+  showProducts(filtered);
 }
 
-document.addEventListener("DOMContentLoaded", showProducts);
+document.addEventListener("DOMContentLoaded", () => {
+  showProducts();
+  updateCart();
+});
