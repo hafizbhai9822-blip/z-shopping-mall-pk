@@ -127,7 +127,52 @@ function searchProducts() {
   showProducts(filtered);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function() {
+
   showProducts();
   updateCart();
+
+  const checkoutForm = document.getElementById("checkout-form");
+
+  if (checkoutForm) {
+    checkoutForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+      }
+
+      const name = document.getElementById("customer-name").value.trim();
+      const phone = document.getElementById("customer-phone").value.trim();
+      const city = document.getElementById("customer-city").value.trim();
+      const address = document.getElementById("customer-address").value.trim();
+
+      const total = cart.reduce(
+        (sum, item) => sum + item.price * item.quantity, 0
+      );
+
+      let message = `New Order - Z.Shopping Mall.pk\n\n`;
+      message += `Customer: ${name}\n`;
+      message += `Phone: ${phone}\n`;
+      message += `City: ${city}\n`;
+      message += `Address: ${address}\n\n`;
+      message += `Products:\n`;
+
+      cart.forEach(item => {
+        message += `${item.name} x ${item.quantity} = Rs. ${item.price * item.quantity}\n`;
+      });
+
+      message += `\nTotal: Rs. ${total}\n`;
+      message += `Payment: Cash on Delivery`;
+
+      const whatsappNumber = "923026790033";
+
+      const whatsappLink =
+        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+      window.open(whatsappLink, "_blank");
+    });
+  }
+
 });
