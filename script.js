@@ -153,6 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const phone = document.getElementById("customer-phone").value.trim();
       const city = document.getElementById("customer-city").value.trim();
       const address = document.getElementById("customer-address").value.trim();
+      const paymentMethod = document.getElementById("payment-method").value;
 
       if (!name || !phone || !city || !address) {
         alert("Please complete all delivery details.");
@@ -176,7 +177,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         p_phone: phone,
         p_city: city,
         p_address: address,
-        p_items: items
+        p_items: items,
+        p_payment_method: paymentMethod
       });
 
       if (error) {
@@ -185,19 +187,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      const orderId = data.id;
       const orderNumber = data.order_number;
 
       let message = `New Order - Z.Shopping Mall.pk\n`;
       message += `Order Number: ${orderNumber}\n`;
       message += `Customer: ${name}\nPhone: ${phone}\n`;
-      message += `City: ${city}\nAddress: ${address}\n\nProducts:\n`;
+      message += `City: ${city}\nAddress: ${address}\n`;
+      message += `Payment Method: ${paymentMethod}\n\nProducts:\n`;
 
       cart.forEach(p => {
         message += `${p.name} x ${p.quantity} = Rs. ${p.price * p.quantity}\n`;
       });
 
-      message += `\nTotal: Rs. ${total}\nPayment: Cash on Delivery`;
+      message += `\nTotal: Rs. ${total}`;
+
+      if (paymentMethod !== "COD") {
+        message += "\nPayment Status: Awaiting payment verification";
+      }
 
       const whatsappLink =
         `https://wa.me/923026790033?text=${encodeURIComponent(message)}`;
@@ -206,6 +212,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       saveCart();
       updateCart();
       form.reset();
+
+      const paymentSelect = document.getElementById("payment-method");
+      if (paymentSelect) {
+        paymentSelect.dispatchEvent(new Event("change"));
+      }
 
       alert("Your order has been saved successfully! Order Number: " + orderNumber);
       window.open(whatsappLink, "_blank");
