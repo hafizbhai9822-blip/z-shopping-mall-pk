@@ -254,7 +254,7 @@ function showPaymentDetails() {
 paymentMethod.addEventListener("change", showPaymentDetails);
 showPaymentDetails();
 
-// CHAT
+// CUSTOMER CHAT WITH PRIVATE CHAT KEY
 const chatBox = document.getElementById("chat-box");
 const chatMessages = document.getElementById("chat-messages");
 const chatForm = document.getElementById("chat-form");
@@ -263,53 +263,83 @@ const chatPhone = document.getElementById("chat-phone");
 const chatText = document.getElementById("chat-text");
 
 let chatTimer = null;
+let chatKey = "";
+let loadingChat = false;
+
+function cleanPhone(phone) {
+  return phone.replace(/\D/g, "");
+}
+
+function getChatKey(phone) {
+  const storageKey = "zshopping_chat_" + phone;
+  let key = localStorage.getItem(storageKey);
+
+  if (!key) {
+    key = crypto.randomUUID();
+    localStorage.setItem(storageKey, key);
+  }
+
+  return key;
+}
 
 document.getElementById("chat-open").onclick = () => {
   chatBox.style.display = "block";
+  loadChat();
 };
 
 document.getElementById("chat-close").onclick = () => {
   chatBox.style.display = "none";
 };
 
-function cleanPhone(phone) {
-  return phone.replace(/\D/g, "");
-}
-
 async function loadChat() {
   const phone = cleanPhone(chatPhone.value);
 
-  if (!phone || phone.length < 10) return;
+  if (!phone || phone.length < 10 || loadingChat) return;
 
-  const { data, error } = await supabaseClient
-    .from("chats")
-    .select("*")
-    .eq("phone", phone)
-    .order("created_at", { ascending: true });
+  loadingChat = true;
 
-  if (error) return;
+  try {
+    chatKey = getChatKey(phone);
 
-  chatMessages.innerHTML = "";
+    const { data, error } = await supabaseClient.rpc(
+      "get_customer_chat",
+      {
+        p_phone: phone,
+        p_key: chatKey
+      }
+    );
 
-  if (!data || data.length === 0) {
-    chatMessages.innerHTML =
-      '<p style="text-align:center;color:#777;">No messages yet.</p>';
-    return;
+    if (error) {
+      console.error("Chat loading error:", error);
+      return;
+    }
+
+    chatMessages.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      chatMessages.innerHTML =
+        '<p style="text-align:center;color:#777;">No messages yet.</p>';
+      return;
+    }
+
+    data.forEach(message => {
+      const div = document.createElement("div");
+
+      div.className = "chat-msg " +
+        (message.sender === "customer" ? "chat-customer" : "chat-admin");
+
+      div.textContent =
+        (message.sender === "customer" ? "You: " : "Store: ") +
+        message.message;
+
+      chatMessages.appendChild(div);
+    });
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  } finally {
+    loadingChat = false;
   }
-
-  data.forEach(message => {
-    const div = document.createElement("div");
-    div.className = "chat-msg " +
-      (message.sender === "customer" ? "chat-customer" : "chat-admin");
-
-    div.textContent =
-      (message.sender === "customer" ? "You: " : "Store: ") +
-      message.message;
-
-    chatMessages.appendChild(div);
-  });
-
-  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 chatPhone.addEventListener("change", loadChat);
@@ -327,23 +357,36 @@ chatForm.addEventListener("submit", async (e) => {
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("chats")
-    .insert([{
-      customer_name: name,
-      phone: phone,
-      message: message,
-      sender: "customer"
-    }]);
+  chatKey = getChatKey(phone);
 
-  if (error) {
-    alert("Message could not be sent. Please try again.");
-    console.error(error);
-    return;
+  const sendButton = chatForm.querySelector("button");
+  sendButton.disabled = true;
+  sendButton.textContent = "Sending...";
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "send_customer_chat",
+      {
+        p_name: name,
+        p_phone: phone,
+        p_message: message,
+        p_key: chatKey
+      }
+    );
+
+    if (error || data !== true) {
+      alert("Message could not be sent. Please try again.");
+      console.error(error);
+      return;
+    }
+
+    chatText.value = "";
+    await loadChat();
+
+  } finally {
+    sendButton.disabled = false;
+    sendButton.textContent = "Send Message";
   }
-
-  chatText.value = "";
-  await loadChat();
 });
 
 chatPhone.addEventListener("input", () => {
@@ -351,9 +394,11 @@ chatPhone.addEventListener("input", () => {
   chatTimer = setTimeout(loadChat, 800);
 });
 
-chatName.addEventListener("input", () => {
-  chatPhone.dispatchEvent(new Event("change"));
-});
+setInterval(() => {
+  if (chatBox.style.display === "block") {
+    loadChat();
+  }
+}, 5000);
 </script>
 
 <script src="script.js"></script>
