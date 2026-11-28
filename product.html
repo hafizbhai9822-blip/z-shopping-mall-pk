@@ -2,462 +2,478 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Details | Z.Shopping Mall.pk</title>
-  <meta name="description" content="View product details and order online at Z.Shopping Mall.pk">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Details | Z.Shopping Mall.pk</title>
+<meta name="description" content="View product details and order online at Z.Shopping Mall.pk">
+<link rel="stylesheet" href="style.css">
 
-  <style>
-    .detail-container { max-width:1000px; margin:40px auto; padding:20px; }
-    .detail-card {
-      display:grid; grid-template-columns:1fr 1fr; gap:30px;
-      align-items:start; background:white; padding:25px; border-radius:12px;
-    }
-    .main-media { width:100%; min-height:300px; }
-    .main-media img,.main-media video {
-      width:100%; max-height:450px; object-fit:contain; border-radius:10px;
-    }
-    .media-gallery { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    .media-thumb {
-      width:75px; height:75px; object-fit:cover;
-      border:2px solid #ddd; border-radius:8px; cursor:pointer;
-    }
-    .media-thumb.active { border-color:#198754; }
-    .video-thumb {
-      width:75px; height:75px; border:2px solid #ddd; border-radius:8px;
-      background:#222; color:white; display:flex; align-items:center;
-      justify-content:center; cursor:pointer; font-size:24px;
-    }
-    .detail-info h1 { margin-top:0; }
-    .detail-price { margin:15px 0; }
-    .old-price { color:#888; text-decoration:line-through; font-size:19px; margin-right:10px; }
-    .sale-price { color:#e63946; font-size:27px; font-weight:bold; }
-    .sale-badge {
-      display:inline-block; background:#e63946; color:white;
-      padding:6px 10px; border-radius:5px; font-size:13px;
-      font-weight:bold; margin-top:8px;
-    }
-    .detail-description { line-height:1.8; white-space:pre-wrap; }
-    .back-link { display:inline-block; margin-bottom:20px; }
-
-    .order-section {
-      background:white; padding:25px; margin-top:25px;
-      border-radius:12px; box-shadow:0 3px 15px #00000012;
-    }
-    .order-section h2 { color:#087f5b; margin-top:0; }
-    .order-section h3 { margin-top:25px; border-bottom:1px solid #eee; padding-bottom:10px; }
-    .order-section label { display:block; margin:12px 0 6px; font-weight:600; }
-    .order-section input,.order-section select,.order-section textarea {
-      width:100%; box-sizing:border-box; padding:13px;
-      border:1px solid #ccc; border-radius:7px; font-size:15px;
-      background:white;
-    }
-    .order-section textarea { min-height:90px; resize:vertical; }
-    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
-    .order-summary {
-      background:#f2f8f5; border:1px solid #d5e9dd;
-      border-radius:8px; padding:15px; margin-top:20px;
-    }
-    .order-summary p { margin:8px 0; }
-    .place-order-btn {
-      width:100%; margin-top:22px; padding:15px;
-      border:0; border-radius:7px; background:#087f5b;
-      color:white; font-size:18px; font-weight:bold; cursor:pointer;
-    }
-    .place-order-btn:disabled { background:gray; cursor:not-allowed; }
-    .payment-details {
-      display:none; background:#f5f5f5; padding:15px;
-      border-radius:8px; margin-top:12px;
-    }
-    .checkbox-row { display:flex; align-items:center; gap:9px; margin-top:15px; }
-    .checkbox-row input { width:auto; }
-    .checkbox-row label { display:inline; margin:0; }
-
-    @media(max-width:650px) {
-      .detail-card { grid-template-columns:1fr; }
-      .form-grid { grid-template-columns:1fr; gap:0; }
-    }
-  </style>
+<style>
+.detail-container{max-width:1000px;margin:40px auto;padding:20px}
+.detail-card{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;background:white;padding:25px;border-radius:12px}
+.main-media{width:100%;min-height:300px}
+.main-media img,.main-media video{width:100%;max-height:450px;object-fit:contain;border-radius:10px}
+.media-gallery{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.media-thumb{width:75px;height:75px;object-fit:cover;border:2px solid #ddd;border-radius:8px;cursor:pointer}
+.media-thumb.active{border-color:#198754}
+.video-thumb{width:75px;height:75px;border:2px solid #ddd;border-radius:8px;background:#222;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px}
+.detail-info h1{margin-top:0}
+.detail-price{margin:15px 0}
+.old-price{color:#888;text-decoration:line-through;font-size:19px;margin-right:10px}
+.sale-price{color:#e63946;font-size:27px;font-weight:bold}
+.sale-badge{display:inline-block;background:#e63946;color:white;padding:6px 10px;border-radius:5px;font-size:13px;font-weight:bold;margin-top:8px}
+.detail-description{line-height:1.8;white-space:pre-wrap}
+.back-link{display:inline-block;margin-bottom:20px}
+.order-section{background:white;padding:25px;margin-top:25px;border-radius:12px;box-shadow:0 3px 15px #00000012}
+.order-section h2{color:#087f5b;margin-top:0}
+.order-section h3{margin-top:25px;border-bottom:1px solid #eee;padding-bottom:10px}
+.order-section label{display:block;margin:12px 0 6px;font-weight:600}
+.order-section input,.order-section select,.order-section textarea{width:100%;box-sizing:border-box;padding:13px;border:1px solid #ccc;border-radius:7px;font-size:15px;background:white}
+.order-section textarea{min-height:90px;resize:vertical}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.order-summary{background:#f2f8f5;border:1px solid #d5e9dd;border-radius:8px;padding:15px;margin-top:20px}
+.order-summary p{margin:8px 0}
+.place-order-btn{width:100%;margin-top:22px;padding:15px;border:0;border-radius:7px;background:#087f5b;color:white;font-size:18px;font-weight:bold;cursor:pointer}
+.place-order-btn:disabled{background:gray;cursor:not-allowed}
+.payment-details{display:none;background:#f5f5f5;padding:15px;border-radius:8px;margin-top:12px}
+.checkbox-row{display:flex;align-items:center;gap:9px;margin-top:15px}
+.checkbox-row input{width:auto}
+.checkbox-row label{display:inline;margin:0}
+#address-status{font-size:13px;margin-top:7px;color:#087f5b}
+@media(max-width:650px){.detail-card{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr;gap:0}}
+</style>
 </head>
 
 <body>
-  <main class="detail-container">
-    <a class="back-link" href="index.html">← Back to Store</a>
-    <div id="product-detail">Loading product...</div>
-  </main>
+<main class="detail-container">
+<a class="back-link" href="index.html">← Back to Store</a>
+<div id="product-detail">Loading product...</div>
+</main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
 
-  <script>
-    function escapeHTML(value) {
-      return String(value ?? "").replace(/[&<>"']/g, c => ({
-        "&":"&amp;", "<":"&lt;", ">":"&gt;",
-        '"':"&quot;", "'":"&#39;"
-      }[c]));
-    }
+<script>
+function escapeHTML(value){
+  return String(value??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
 
-    function money(value) {
-      return Number(value || 0).toLocaleString("en-PK");
-    }
+function money(value){
+  return Number(value||0).toLocaleString("en-PK");
+}
 
-    async function loadProductDetail() {
-      const container = document.getElementById("product-detail");
-      const id = new URLSearchParams(location.search).get("id");
+function cleanPhone(value){
+  return String(value||"").replace(/\D/g,"");
+}
 
-      if (!id) {
-        container.innerText = "Product not found.";
-        return;
-      }
+async function loadProductDetail(){
+  const container=document.getElementById("product-detail");
+  const id=new URLSearchParams(location.search).get("id");
 
-      const { data: product, error } = await supabaseClient
-        .from("products")
-        .select("id,name,description,price,original_price,discount_percent,image_url,stock,media_urls")
-        .eq("id", id)
-        .eq("is_active", true)
-        .maybeSingle();
+  if(!id){
+    container.innerText="Product not found.";
+    return;
+  }
 
-      if (error || !product) {
-        container.innerText = "Product could not be found.";
-        console.error(error);
-        return;
-      }
+  const {data:product,error}=await supabaseClient
+    .from("products")
+    .select("id,name,description,price,original_price,discount_percent,image_url,stock,media_urls")
+    .eq("id",id)
+    .eq("is_active",true)
+    .maybeSingle();
 
-      document.title = product.name + " | Z.Shopping Mall.pk";
+  if(error||!product){
+    container.innerText="Product could not be found.";
+    console.error(error);
+    return;
+  }
 
-      const price = Number(product.price || 0);
-      const original = Number(product.original_price || 0);
-      const discount = Number(product.discount_percent || 0);
+  document.title=product.name+" | Z.Shopping Mall.pk";
 
-      const priceHTML = discount > 0 && original > price
-        ? `<span class="old-price">Rs. ${money(original)}</span>
-           <span class="sale-price">Rs. ${money(price)}</span>
-           <br><span class="sale-badge">SALE - ${discount}% OFF</span>`
-        : `<span class="sale-price" style="color:#198754">Rs. ${money(price)}</span>`;
+  const price=Number(product.price||0);
+  const original=Number(product.original_price||0);
+  const discount=Number(product.discount_percent||0);
 
-      let media = Array.isArray(product.media_urls) ? product.media_urls : [];
+  const priceHTML=discount>0&&original>price
+    ? `<span class="old-price">Rs. ${money(original)}</span>
+       <span class="sale-price">Rs. ${money(price)}</span>
+       <br><span class="sale-badge">SALE - ${discount}% OFF</span>`
+    : `<span class="sale-price" style="color:#198754">Rs. ${money(price)}</span>`;
 
-      if (!media.length && product.image_url) {
-        media = [{ type:"image", url:product.image_url }];
-      }
+  let media=Array.isArray(product.media_urls)?product.media_urls:[];
+  if(!media.length&&product.image_url){
+    media=[{type:"image",url:product.image_url}];
+  }
+  if(!media.length){
+    media=[{type:"image",url:"https://placehold.co/600x450?text=Product"}];
+  }
 
-      if (!media.length) {
-        media = [{ type:"image", url:"https://placehold.co/600x450?text=Product" }];
-      }
+  container.innerHTML=`
+    <article class="detail-card">
+      <div>
+        <div id="main-media" class="main-media"></div>
+        <div id="media-gallery" class="media-gallery"></div>
+      </div>
+      <div class="detail-info">
+        <h1>${escapeHTML(product.name)}</h1>
+        <div class="detail-price">${priceHTML}</div>
+        <p><strong>Availability:</strong>
+          ${Number(product.stock)>0?"In Stock":"Out of Stock"}
+        </p>
+        <h3>Product Details</h3>
+        <div class="detail-description">${escapeHTML(product.description||"No description available.")}</div>
+      </div>
+    </article>
 
-      container.innerHTML = `
-        <article class="detail-card">
+    <section class="order-section" id="order-form-section">
+      <h2>Complete Your Order</h2>
+      <p>اپنی معلومات درج کریں اور اپنا آرڈر مکمل کریں۔</p>
+
+      <form id="direct-order-form">
+        <h3>Customer Information</h3>
+
+        <div class="form-grid">
           <div>
-            <div id="main-media" class="main-media"></div>
-            <div id="media-gallery" class="media-gallery"></div>
+            <label for="customer-name">Full Name *</label>
+            <input id="customer-name" required maxlength="100" placeholder="Your full name">
           </div>
-
-          <div class="detail-info">
-            <h1>${escapeHTML(product.name)}</h1>
-            <div class="detail-price">${priceHTML}</div>
-
-            <p><strong>Availability:</strong>
-              ${Number(product.stock) > 0 ? "In Stock" : "Out of Stock"}
-            </p>
-
-            <h3>Product Details</h3>
-            <div class="detail-description">
-              ${escapeHTML(product.description || "No description available.")}
-            </div>
+          <div>
+            <label for="customer-phone">Mobile Number *</label>
+            <input id="customer-phone" type="tel" required maxlength="20" placeholder="03XXXXXXXXX">
+            <div id="address-status">موبائل نمبر درج کریں تاکہ محفوظ پتہ تلاش کیا جا سکے۔</div>
           </div>
-        </article>
+        </div>
 
-        <section class="order-section" id="order-form-section">
-          <h2>Complete Your Order</h2>
-          <p>اپنی معلومات درج کریں اور اپنا آرڈر مکمل کریں۔</p>
+        <label for="alternate-phone">Alternate Mobile Number</label>
+        <input id="alternate-phone" type="tel" maxlength="20" placeholder="Optional">
 
-          <form id="direct-order-form">
-            <h3>Customer Information</h3>
+        <h3>Delivery Address</h3>
 
-            <div class="form-grid">
-              <div>
-                <label for="customer-name">Full Name *</label>
-                <input id="customer-name" required maxlength="100" placeholder="Your full name">
-              </div>
-              <div>
-                <label for="customer-phone">Mobile Number *</label>
-                <input id="customer-phone" type="tel" required maxlength="20" placeholder="03XXXXXXXXX">
-              </div>
-            </div>
+        <div class="form-grid">
+          <div>
+            <label for="customer-city">City *</label>
+            <input id="customer-city" required maxlength="80" placeholder="Enter your city">
+          </div>
+          <div>
+            <label for="customer-area">Sector / Block / Area *</label>
+            <input id="customer-area" required maxlength="120" placeholder="Enter your area">
+          </div>
+        </div>
 
-            <label for="alternate-phone">Alternate Mobile Number</label>
-            <input id="alternate-phone" type="tel" maxlength="20" placeholder="Optional">
+        <label for="customer-address">Complete Address *</label>
+        <textarea id="customer-address" required maxlength="500" placeholder="House number, street, road and complete address"></textarea>
 
-            <h3>Delivery Address</h3>
+        <label for="nearby-place">Nearby Famous Place</label>
+        <input id="nearby-place" maxlength="150" placeholder="Optional">
 
-            <div class="form-grid">
-              <div>
-                <label for="customer-city">City *</label>
-                <input id="customer-city" required maxlength="80" placeholder="Enter your city">
-              </div>
-              <div>
-                <label for="customer-area">Sector / Block / Area *</label>
-                <input id="customer-area" required maxlength="120" placeholder="Enter your area">
-              </div>
-            </div>
+        <label for="address-type">Save Address As</label>
+        <select id="address-type">
+          <option value="Home">Home</option>
+          <option value="Work">Work</option>
+          <option value="Other">Other</option>
+        </select>
 
-            <label for="customer-address">Complete Address *</label>
-            <textarea id="customer-address" required maxlength="500"
-              placeholder="House number, street, road and complete address"></textarea>
+        <div class="checkbox-row">
+          <input type="checkbox" id="default-address">
+          <label for="default-address">Save as my default address</label>
+        </div>
 
-            <label for="nearby-place">Nearby Famous Place</label>
-            <input id="nearby-place" maxlength="150" placeholder="Optional">
+        <h3>Order Quantity</h3>
+        <label for="order-quantity">Quantity *</label>
+        <input type="number" id="order-quantity" value="1" min="1"
+          max="${Math.max(0,Number(product.stock))}" required>
 
-            <label for="address-type">Save Address As</label>
-            <select id="address-type">
-              <option value="Home">Home</option>
-              <option value="Work">Work</option>
-              <option value="Other">Other</option>
-            </select>
+        <div class="order-summary">
+          <p><strong>Product:</strong> ${escapeHTML(product.name)}</p>
+          <p><strong>Unit Price:</strong> Rs. ${money(price)}</p>
+          <p><strong>Quantity:</strong> <span id="summary-quantity">1</span></p>
+          <p><strong>Total:</strong> Rs. <span id="summary-total">${money(price)}</span></p>
+        </div>
 
-            <div class="checkbox-row">
-              <input type="checkbox" id="default-address">
-              <label for="default-address">Save as my default address on this device</label>
-            </div>
+        <h3>Payment Method</h3>
+        <label for="payment-method">Select Payment Method *</label>
+        <select id="payment-method" required>
+          <option value="COD">Cash on Delivery</option>
+          <option value="Easypaisa">Easypaisa</option>
+          <option value="JazzCash">JazzCash</option>
+          <option value="Bank Transfer">MCB Bank Transfer</option>
+        </select>
 
-            <h3>Order Quantity</h3>
-            <label for="order-quantity">Quantity *</label>
-            <input type="number" id="order-quantity" value="1" min="1"
-              max="${Math.max(0, Number(product.stock))}" required>
+        <div id="payment-details" class="payment-details">
+          <h3 id="payment-title"></h3>
+          <p id="payment-account"></p>
+          <p><strong>Account Title:</strong> Muhammad Zubair</p>
+          <p>ادائیگی کرنے کے بعد رسید محفوظ رکھیں۔</p>
+        </div>
 
-            <div class="order-summary">
-              <p><strong>Product:</strong> ${escapeHTML(product.name)}</p>
-              <p><strong>Unit Price:</strong> Rs. ${money(price)}</p>
-              <p><strong>Quantity:</strong> <span id="summary-quantity">1</span></p>
-              <p><strong>Total:</strong> Rs. <span id="summary-total">${money(price)}</span></p>
-            </div>
+        <button class="place-order-btn" id="place-order-btn" type="submit"
+          ${Number(product.stock)<=0?"disabled":""}>
+          ${Number(product.stock)<=0?"Out of Stock":"Place Order"}
+        </button>
+      </form>
+    </section>
+  `;
 
-            <h3>Payment Method</h3>
-            <label for="payment-method">Select Payment Method *</label>
-            <select id="payment-method" required>
-              <option value="COD">Cash on Delivery</option>
-              <option value="Easypaisa">Easypaisa</option>
-              <option value="JazzCash">JazzCash</option>
-              <option value="Bank Transfer">MCB Bank Transfer</option>
-            </select>
+  // Product gallery
+  const mainMedia=document.getElementById("main-media");
+  const gallery=document.getElementById("media-gallery");
 
-            <div id="payment-details" class="payment-details">
-              <h3 id="payment-title"></h3>
-              <p id="payment-account"></p>
-              <p><strong>Account Title:</strong> Muhammad Zubair</p>
-              <p>ادائیگی کرنے کے بعد رسید محفوظ رکھیں۔</p>
-            </div>
+  function showMedia(index){
+    const item=media[index];
 
-            <button class="place-order-btn" id="place-order-btn" type="submit"
-              ${Number(product.stock) <= 0 ? "disabled" : ""}>
-              ${Number(product.stock) <= 0 ? "Out of Stock" : "Place Order"}
-            </button>
-          </form>
-        </section>
-      `;
-
-      const mainMedia = document.getElementById("main-media");
-      const gallery = document.getElementById("media-gallery");
-
-      function showMedia(index) {
-        const item = media[index];
-
-        if (item.type === "video") {
-          mainMedia.innerHTML = `
-            <video controls playsinline style="width:100%;max-height:450px;border-radius:10px;">
-              <source src="${escapeHTML(item.url)}">
-            </video>`;
-        } else {
-          mainMedia.innerHTML = `
-            <img src="${escapeHTML(item.url)}" alt="${escapeHTML(product.name)}">`;
-        }
-
-        document.querySelectorAll(".media-thumb,.video-thumb").forEach((thumb, i) => {
-          thumb.classList.toggle("active", i === index);
-        });
-      }
-
-      media.forEach((item, index) => {
-        if (item.type === "video") {
-          const thumb = document.createElement("div");
-          thumb.className = "video-thumb";
-          thumb.textContent = "▶";
-          thumb.title = "Play Video";
-          thumb.onclick = () => showMedia(index);
-          gallery.appendChild(thumb);
-        } else {
-          const thumb = document.createElement("img");
-          thumb.src = item.url;
-          thumb.alt = "Product image";
-          thumb.className = "media-thumb";
-          thumb.onclick = () => showMedia(index);
-          gallery.appendChild(thumb);
-        }
-      });
-
-      showMedia(0);
-
-      const quantityInput = document.getElementById("order-quantity");
-
-      function updateSummary() {
-        let quantity = Math.max(1, Number(quantityInput.value) || 1);
-        quantity = Math.min(quantity, Number(product.stock));
-        quantityInput.value = quantity;
-        document.getElementById("summary-quantity").textContent = quantity;
-        document.getElementById("summary-total").textContent = money(price * quantity);
-      }
-
-      quantityInput.addEventListener("input", updateSummary);
-
-      const paymentMethod = document.getElementById("payment-method");
-      const paymentDetails = document.getElementById("payment-details");
-
-      function showPaymentDetails() {
-        const accounts = {
-          Easypaisa: ["Easypaisa Payment", "Account Number: 03026790033"],
-          JazzCash: ["JazzCash Payment", "Account Number: 03026790033"],
-          "Bank Transfer": ["MCB Bank Limited", "Account Number: 1730592991004169"]
-        };
-
-        const details = accounts[paymentMethod.value];
-
-        if (!details) {
-          paymentDetails.style.display = "none";
-          return;
-        }
-
-        document.getElementById("payment-title").textContent = details[0];
-        document.getElementById("payment-account").textContent = details[1];
-        paymentDetails.style.display = "block";
-      }
-
-      paymentMethod.addEventListener("change", showPaymentDetails);
-      showPaymentDetails();
-
-      // Previously saved address can be loaded on this device
-      const savedAddress = localStorage.getItem("zmart_default_address");
-
-      if (savedAddress) {
-        try {
-          const a = JSON.parse(savedAddress);
-          document.getElementById("customer-name").value = a.name || "";
-          document.getElementById("customer-phone").value = a.phone || "";
-          document.getElementById("alternate-phone").value = a.alternatePhone || "";
-          document.getElementById("customer-city").value = a.city || "";
-          document.getElementById("customer-area").value = a.area || "";
-          document.getElementById("customer-address").value = a.address || "";
-          document.getElementById("nearby-place").value = a.nearby || "";
-          document.getElementById("address-type").value = a.type || "Home";
-          document.getElementById("default-address").checked = true;
-        } catch (e) {
-          console.error("Saved address could not be loaded", e);
-        }
-      }
-
-      document.getElementById("direct-order-form").addEventListener("submit", async event => {
-        event.preventDefault();
-
-        const button = document.getElementById("place-order-btn");
-        const name = document.getElementById("customer-name").value.trim();
-        const phone = document.getElementById("customer-phone").value.trim();
-        const alternatePhone = document.getElementById("alternate-phone").value.trim();
-        const city = document.getElementById("customer-city").value.trim();
-        const area = document.getElementById("customer-area").value.trim();
-        const address = document.getElementById("customer-address").value.trim();
-        const nearby = document.getElementById("nearby-place").value.trim();
-        const addressType = document.getElementById("address-type").value;
-        const quantity = Number(quantityInput.value);
-        const method = paymentMethod.value;
-
-        if (!name || !phone || !city || !area || !address) {
-          alert("Please complete all required information.");
-          return;
-        }
-
-        if (!Number.isInteger(quantity) || quantity < 1 || quantity > Number(product.stock)) {
-          alert("Please enter a valid quantity within available stock.");
-          return;
-        }
-
-        const fullAddress =
-          `Area: ${area}\nAddress: ${address}\nNearby Place: ${nearby}\nAddress Type: ${addressType}\nAlternate Phone: ${alternatePhone}`;
-
-        const total = price * quantity;
-
-        const items = [{
-          product_id: product.id,
-          product_name: product.name,
-          quantity: quantity,
-          unit_price: price,
-          subtotal: total
-        }];
-
-        button.disabled = true;
-        button.textContent = "Processing Order...";
-
-        try {
-          const { data, error } = await supabaseClient.rpc("place_order", {
-            p_customer_name: name,
-            p_phone: phone,
-            p_city: city,
-            p_address: fullAddress,
-            p_items: items,
-            p_payment_method: method
-          });
-
-          if (error) {
-            console.error(error);
-            alert("Order could not be saved: " + error.message);
-            return;
-          }
-
-          if (document.getElementById("default-address").checked) {
-            localStorage.setItem("zmart_default_address", JSON.stringify({
-              name, phone, alternatePhone, city, area, address, nearby, type:addressType
-            }));
-          }
-
-          const orderNumber = data.order_number;
-
-          let message = `New Order - Z.Shopping Mall.pk\n`;
-          message += `Order Number: ${orderNumber}\n`;
-          message += `Customer: ${name}\nPhone: ${phone}\n`;
-          message += `Alternate Phone: ${alternatePhone}\n`;
-          message += `City: ${city}\nArea: ${area}\n`;
-          message += `Address: ${address}\nNearby Place: ${nearby}\n`;
-          message += `Address Type: ${addressType}\n`;
-          message += `Payment Method: ${method}\n\n`;
-          message += `Product: ${product.name}\n`;
-          message += `Quantity: ${quantity}\n`;
-          message += `Unit Price: Rs. ${price}\n`;
-          message += `Total: Rs. ${total}\n`;
-
-          if (method !== "COD") {
-            message += "Payment Status: Awaiting payment verification";
-          }
-
-          const whatsappLink =
-            `https://wa.me/923026790033?text=${encodeURIComponent(message)}`;
-
-          alert("Your order has been saved successfully! Order Number: " + orderNumber);
-          window.open(whatsappLink, "_blank");
-
-          button.textContent = "Order Placed Successfully";
-
-        } catch (err) {
-          console.error(err);
-          alert("Something went wrong. Please try again.");
-        } finally {
-          if (button.textContent !== "Order Placed Successfully") {
-            button.disabled = false;
-            button.textContent = "Place Order";
-          }
-        }
-      });
+    if(item.type==="video"){
+      mainMedia.innerHTML=`
+        <video controls playsinline style="width:100%;max-height:450px;border-radius:10px;">
+          <source src="${escapeHTML(item.url)}">
+        </video>`;
+    }else{
+      mainMedia.innerHTML=`<img src="${escapeHTML(item.url)}" alt="${escapeHTML(product.name)}">`;
     }
 
-    loadProductDetail();
-  </script>
+    document.querySelectorAll(".media-thumb,.video-thumb").forEach((thumb,i)=>{
+      thumb.classList.toggle("active",i===index);
+    });
+  }
+
+  media.forEach((item,index)=>{
+    if(item.type==="video"){
+      const thumb=document.createElement("div");
+      thumb.className="video-thumb";
+      thumb.textContent="▶";
+      thumb.title="Play Video";
+      thumb.onclick=()=>showMedia(index);
+      gallery.appendChild(thumb);
+    }else{
+      const thumb=document.createElement("img");
+      thumb.src=item.url;
+      thumb.alt="Product image";
+      thumb.className="media-thumb";
+      thumb.onclick=()=>showMedia(index);
+      gallery.appendChild(thumb);
+    }
+  });
+
+  showMedia(0);
+
+  // Quantity summary
+  const quantityInput=document.getElementById("order-quantity");
+
+  function updateSummary(){
+    let quantity=Math.max(1,Number(quantityInput.value)||1);
+    quantity=Math.min(quantity,Number(product.stock));
+    quantityInput.value=quantity;
+    document.getElementById("summary-quantity").textContent=quantity;
+    document.getElementById("summary-total").textContent=money(price*quantity);
+  }
+
+  quantityInput.addEventListener("input",updateSummary);
+
+  // Payment details
+  const paymentMethod=document.getElementById("payment-method");
+  const paymentDetails=document.getElementById("payment-details");
+
+  function showPaymentDetails(){
+    const accounts={
+      Easypaisa:["Easypaisa Payment","Account Number: 03026790033"],
+      JazzCash:["JazzCash Payment","Account Number: 03026790033"],
+      "Bank Transfer":["MCB Bank Limited","Account Number: 1730592991004169"]
+    };
+
+    const details=accounts[paymentMethod.value];
+
+    if(!details){
+      paymentDetails.style.display="none";
+      return;
+    }
+
+    document.getElementById("payment-title").textContent=details[0];
+    document.getElementById("payment-account").textContent=details[1];
+    paymentDetails.style.display="block";
+  }
+
+  paymentMethod.addEventListener("change",showPaymentDetails);
+  showPaymentDetails();
+
+  // Find saved address in Supabase using mobile number
+  const phoneInput=document.getElementById("customer-phone");
+  const addressStatus=document.getElementById("address-status");
+  let lookupTimer=null;
+  let lastLookupPhone="";
+
+  async function findDefaultAddress(){
+    const phone=cleanPhone(phoneInput.value);
+
+    if(phone.length<10){
+      addressStatus.textContent="موبائل نمبر درج کریں تاکہ محفوظ پتہ تلاش کیا جا سکے۔";
+      return;
+    }
+
+    if(phone===lastLookupPhone)return;
+    lastLookupPhone=phone;
+
+    addressStatus.textContent="محفوظ پتہ تلاش کیا جا رہا ہے...";
+
+    try{
+      const {data,error}=await supabaseClient.rpc("get_customer_address",{
+        p_phone:phone
+      });
+
+      if(error){
+        console.error("Address lookup error:",error);
+        addressStatus.textContent="پتہ تلاش نہیں ہو سکا۔ آپ اپنا پتہ درج کر سکتے ہیں۔";
+        return;
+      }
+
+      if(data&&data.length>0){
+        const a=data[0];
+
+        document.getElementById("customer-name").value=a.customer_name||"";
+        document.getElementById("alternate-phone").value=a.alternate_phone||"";
+        document.getElementById("customer-city").value=a.city||"";
+        document.getElementById("customer-area").value=a.area||"";
+        document.getElementById("customer-address").value=a.address||"";
+        document.getElementById("nearby-place").value=a.nearby_place||"";
+        document.getElementById("address-type").value=a.address_type||"Home";
+        document.getElementById("default-address").checked=true;
+
+        addressStatus.textContent="آپ کا محفوظ شدہ پتہ مل گیا ہے۔";
+      }else{
+        addressStatus.textContent="اس نمبر پر کوئی محفوظ پتہ نہیں ملا۔ نیا پتہ درج کریں۔";
+      }
+    }catch(err){
+      console.error(err);
+      addressStatus.textContent="پتہ تلاش کرنے میں مسئلہ پیش آیا۔";
+    }
+  }
+
+  phoneInput.addEventListener("blur",findDefaultAddress);
+  phoneInput.addEventListener("change",findDefaultAddress);
+  phoneInput.addEventListener("input",()=>{
+    clearTimeout(lookupTimer);
+    lastLookupPhone="";
+    lookupTimer=setTimeout(findDefaultAddress,900);
+  });
+
+  // Place order
+  document.getElementById("direct-order-form").addEventListener("submit",async event=>{
+    event.preventDefault();
+
+    const button=document.getElementById("place-order-btn");
+    const name=document.getElementById("customer-name").value.trim();
+    const phone=cleanPhone(phoneInput.value);
+    const alternatePhone=cleanPhone(document.getElementById("alternate-phone").value);
+    const city=document.getElementById("customer-city").value.trim();
+    const area=document.getElementById("customer-area").value.trim();
+    const address=document.getElementById("customer-address").value.trim();
+    const nearby=document.getElementById("nearby-place").value.trim();
+    const addressType=document.getElementById("address-type").value;
+    const quantity=Number(quantityInput.value);
+    const method=paymentMethod.value;
+
+    if(!name||phone.length<10||!city||!area||!address){
+      alert("Please complete all required information and enter a valid mobile number.");
+      return;
+    }
+
+    if(!Number.isInteger(quantity)||quantity<1||quantity>Number(product.stock)){
+      alert("Please enter a valid quantity within available stock.");
+      return;
+    }
+
+    const fullAddress=
+      `Area: ${area}\nAddress: ${address}\nNearby Place: ${nearby}\nAddress Type: ${addressType}\nAlternate Phone: ${alternatePhone}`;
+
+    const total=price*quantity;
+
+    const items=[{
+      product_id:product.id,
+      product_name:product.name,
+      quantity:quantity,
+      unit_price:price,
+      subtotal:total
+    }];
+
+    button.disabled=true;
+    button.textContent="Processing Order...";
+
+    try{
+      const {data,error}=await supabaseClient.rpc("place_order",{
+        p_customer_name:name,
+        p_phone:phone,
+        p_city:city,
+        p_address:fullAddress,
+        p_items:items,
+        p_payment_method:method
+      });
+
+      if(error){
+        console.error(error);
+        alert("Order could not be saved: "+error.message);
+        return;
+      }
+
+      // Save default address in Supabase after successful order
+      if(document.getElementById("default-address").checked){
+        const {error:saveError}=await supabaseClient.rpc("save_customer_address",{
+          p_phone:phone,
+          p_customer_name:name,
+          p_alternate_phone:alternatePhone,
+          p_city:city,
+          p_area:area,
+          p_address:address,
+          p_nearby_place:nearby,
+          p_address_type:addressType
+        });
+
+        if(saveError){
+          console.error("Address save error:",saveError);
+          alert("آرڈر محفوظ ہوگیا، لیکن Default Address محفوظ نہیں ہو سکا۔");
+        }else{
+          addressStatus.textContent="آپ کا Default Address محفوظ ہوگیا ہے۔";
+        }
+      }
+
+      const orderNumber=data.order_number;
+
+      let message=`New Order - Z.Shopping Mall.pk\n`;
+      message+=`Order Number: ${orderNumber}\n`;
+      message+=`Customer: ${name}\nPhone: ${phone}\n`;
+      message+=`Alternate Phone: ${alternatePhone}\n`;
+      message+=`City: ${city}\nArea: ${area}\n`;
+      message+=`Address: ${address}\nNearby Place: ${nearby}\n`;
+      message+=`Address Type: ${addressType}\n`;
+      message+=`Payment Method: ${method}\n\n`;
+      message+=`Product: ${product.name}\n`;
+      message+=`Quantity: ${quantity}\n`;
+      message+=`Unit Price: Rs. ${price}\n`;
+      message+=`Total: Rs. ${total}\n`;
+
+      if(method!=="COD"){
+        message+="Payment Status: Awaiting payment verification";
+      }
+
+      const whatsappLink=`https://wa.me/923026790033?text=${encodeURIComponent(message)}`;
+
+      alert("Your order has been saved successfully! Order Number: "+orderNumber);
+      window.open(whatsappLink,"_blank");
+
+      button.textContent="Order Placed Successfully";
+
+    }catch(err){
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    }finally{
+      if(button.textContent!=="Order Placed Successfully"){
+        button.disabled=false;
+        button.textContent="Place Order";
+      }
+    }
+  });
+}
+
+loadProductDetail();
+</script>
 </body>
 </html>
