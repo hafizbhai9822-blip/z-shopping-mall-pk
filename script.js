@@ -44,23 +44,28 @@ function showProducts(list = products) {
 
   container.innerHTML = list.map(p => `
     <div class="product-card">
-      <img src="${p.image_url || 'https://placehold.co/400x300?text=Product'}"
-           alt="${escapeHTML(p.name)}">
-      <h3>${escapeHTML(p.name)}</h3>
-      <p>Rs. ${Number(p.price).toLocaleString()}</p>
-      <button onclick="addToCart(${p.id})"
-        ${p.stock <= 0 ? "disabled" : ""}>
-        ${p.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+      <a href="product.html?id=${encodeURIComponent(p.id)}"
+         style="color:inherit;text-decoration:none;">
+        <img src="${escapeHTML(p.image_url || 'https://placehold.co/400x300?text=Product')}"
+             alt="${escapeHTML(p.name)}">
+        <h3>${escapeHTML(p.name)}</h3>
+      </a>
+
+      <p>Rs. ${Number(p.price).toLocaleString("en-PK")}</p>
+
+      <button onclick="addToCart(${JSON.stringify(p.id)})"
+        ${Number(p.stock) <= 0 ? "disabled" : ""}>
+        ${Number(p.stock) <= 0 ? "Out of Stock" : "Add to Cart"}
       </button>
     </div>
   `).join("");
 }
 
 function addToCart(id) {
-  const product = products.find(p => p.id === id);
+  const product = products.find(p => String(p.id) === String(id));
   if (!product || product.stock <= 0) return;
 
-  const existing = cart.find(p => p.id === id);
+  const existing = cart.find(p => String(p.id) === String(id));
 
   if (existing) {
     if (existing.quantity >= product.stock) {
@@ -77,14 +82,14 @@ function addToCart(id) {
 }
 
 function removeFromCart(id) {
-  cart = cart.filter(p => p.id !== id);
+  cart = cart.filter(p => String(p.id) !== String(id));
   saveCart();
   updateCart();
 }
 
 function changeQuantity(id, amount) {
-  const item = cart.find(p => p.id === id);
-  const product = products.find(p => p.id === id);
+  const item = cart.find(p => String(p.id) === String(id));
+  const product = products.find(p => String(p.id) === String(id));
   if (!item) return;
 
   if (amount > 0 && product && item.quantity >= product.stock) {
@@ -94,8 +99,9 @@ function changeQuantity(id, amount) {
 
   item.quantity += amount;
 
-  if (item.quantity <= 0) removeFromCart(id);
-  else {
+  if (item.quantity <= 0) {
+    removeFromCart(id);
+  } else {
     saveCart();
     updateCart();
   }
@@ -107,29 +113,32 @@ function updateCart() {
   const list = document.getElementById("cart-items");
 
   const itemCount = cart.reduce((s, p) => s + p.quantity, 0);
-  const amount = cart.reduce((s, p) => s + p.price * p.quantity, 0);
+  const amount = cart.reduce((s, p) => s + Number(p.price) * p.quantity, 0);
 
   if (count) count.innerText = itemCount;
-  if (total) total.innerText = amount.toLocaleString();
+  if (total) total.innerText = amount.toLocaleString("en-PK");
 
   if (list) {
     list.innerHTML = cart.length ? cart.map(p => `
       <div class="cart-item">
-        ${escapeHTML(p.name)} — Rs. ${Number(p.price).toLocaleString()}
-        <button onclick="changeQuantity(${p.id},-1)">−</button>
+        ${escapeHTML(p.name)} — Rs. ${Number(p.price).toLocaleString("en-PK")}
+        <button onclick="changeQuantity(${JSON.stringify(p.id)},-1)">−</button>
         ${p.quantity}
-        <button onclick="changeQuantity(${p.id},1)">+</button>
-        <button onclick="removeFromCart(${p.id})">Remove</button>
+        <button onclick="changeQuantity(${JSON.stringify(p.id)},1)">+</button>
+        <button onclick="removeFromCart(${JSON.stringify(p.id)})">Remove</button>
       </div>
     `).join("") : "<p>Your cart is empty.</p>";
   }
 }
 
 function searchProducts() {
-  const search = document.getElementById("search").value.toLowerCase();
+  const searchInput = document.getElementById("search");
+  if (!searchInput) return;
+
+  const search = searchInput.value.toLowerCase();
 
   showProducts(products.filter(p =>
-    p.name.toLowerCase().includes(search) ||
+    (p.name || "").toLowerCase().includes(search) ||
     (p.description || "").toLowerCase().includes(search)
   ));
 }
@@ -169,7 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         product_name: p.name,
         quantity: p.quantity,
         unit_price: p.price,
-        subtotal: p.price * p.quantity
+        subtotal: Number(p.price) * p.quantity
       }));
 
       const { data, error } = await supabaseClient.rpc("place_order", {
@@ -196,7 +205,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       message += `Payment Method: ${paymentMethod}\n\nProducts:\n`;
 
       cart.forEach(p => {
-        message += `${p.name} x ${p.quantity} = Rs. ${p.price * p.quantity}\n`;
+        message += `${p.name} x ${p.quantity} = Rs. ${Number(p.price) * p.quantity}\n`;
       });
 
       message += `\nTotal: Rs. ${total}`;
