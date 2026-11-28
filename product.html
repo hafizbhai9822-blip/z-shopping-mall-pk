@@ -5,140 +5,83 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Details | Z.Shopping Mall.pk</title>
-  <meta name="description" content="View product details at Z.Shopping Mall.pk">
+  <meta name="description" content="View product details and order online at Z.Shopping Mall.pk">
   <link rel="stylesheet" href="style.css">
 
   <style>
-    .detail-container {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 20px;
-    }
-
+    .detail-container { max-width:1000px; margin:40px auto; padding:20px; }
     .detail-card {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      align-items: start;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
+      display:grid; grid-template-columns:1fr 1fr; gap:30px;
+      align-items:start; background:white; padding:25px; border-radius:12px;
     }
-
-    .main-media {
-      width: 100%;
-      min-height: 300px;
+    .main-media { width:100%; min-height:300px; }
+    .main-media img,.main-media video {
+      width:100%; max-height:450px; object-fit:contain; border-radius:10px;
     }
-
-    .main-media img,
-    .main-media video {
-      width: 100%;
-      max-height: 450px;
-      object-fit: contain;
-      border-radius: 10px;
-    }
-
-    .media-gallery {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-
+    .media-gallery { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
     .media-thumb {
-      width: 75px;
-      height: 75px;
-      object-fit: cover;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      cursor: pointer;
+      width:75px; height:75px; object-fit:cover;
+      border:2px solid #ddd; border-radius:8px; cursor:pointer;
     }
-
-    .media-thumb.active {
-      border-color: #198754;
-    }
-
+    .media-thumb.active { border-color:#198754; }
     .video-thumb {
-      width: 75px;
-      height: 75px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      background: #222;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 24px;
+      width:75px; height:75px; border:2px solid #ddd; border-radius:8px;
+      background:#222; color:white; display:flex; align-items:center;
+      justify-content:center; cursor:pointer; font-size:24px;
     }
-
-    .detail-info h1 {
-      margin-top: 0;
-    }
-
-    .detail-price {
-      margin: 15px 0;
-    }
-
-    .old-price {
-      color: #888;
-      text-decoration: line-through;
-      font-size: 19px;
-      margin-right: 10px;
-    }
-
-    .sale-price {
-      color: #e63946;
-      font-size: 27px;
-      font-weight: bold;
-    }
-
+    .detail-info h1 { margin-top:0; }
+    .detail-price { margin:15px 0; }
+    .old-price { color:#888; text-decoration:line-through; font-size:19px; margin-right:10px; }
+    .sale-price { color:#e63946; font-size:27px; font-weight:bold; }
     .sale-badge {
-      display: inline-block;
-      background: #e63946;
-      color: white;
-      padding: 6px 10px;
-      border-radius: 5px;
-      font-size: 13px;
-      font-weight: bold;
-      margin-top: 8px;
+      display:inline-block; background:#e63946; color:white;
+      padding:6px 10px; border-radius:5px; font-size:13px;
+      font-weight:bold; margin-top:8px;
     }
+    .detail-description { line-height:1.8; white-space:pre-wrap; }
+    .back-link { display:inline-block; margin-bottom:20px; }
 
-    .detail-description {
-      line-height: 1.8;
-      white-space: pre-wrap;
+    .order-section {
+      background:white; padding:25px; margin-top:25px;
+      border-radius:12px; box-shadow:0 3px 15px #00000012;
     }
-
-    .detail-info button {
-      padding: 12px 22px;
-      cursor: pointer;
-      border: 0;
-      border-radius: 6px;
-      background: #198754;
-      color: white;
-      font-size: 16px;
+    .order-section h2 { color:#087f5b; margin-top:0; }
+    .order-section h3 { margin-top:25px; border-bottom:1px solid #eee; padding-bottom:10px; }
+    .order-section label { display:block; margin:12px 0 6px; font-weight:600; }
+    .order-section input,.order-section select,.order-section textarea {
+      width:100%; box-sizing:border-box; padding:13px;
+      border:1px solid #ccc; border-radius:7px; font-size:15px;
+      background:white;
     }
-
-    .detail-info button:disabled {
-      background: gray;
-      cursor: not-allowed;
+    .order-section textarea { min-height:90px; resize:vertical; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .order-summary {
+      background:#f2f8f5; border:1px solid #d5e9dd;
+      border-radius:8px; padding:15px; margin-top:20px;
     }
-
-    .back-link {
-      display: inline-block;
-      margin-bottom: 20px;
+    .order-summary p { margin:8px 0; }
+    .place-order-btn {
+      width:100%; margin-top:22px; padding:15px;
+      border:0; border-radius:7px; background:#087f5b;
+      color:white; font-size:18px; font-weight:bold; cursor:pointer;
     }
+    .place-order-btn:disabled { background:gray; cursor:not-allowed; }
+    .payment-details {
+      display:none; background:#f5f5f5; padding:15px;
+      border-radius:8px; margin-top:12px;
+    }
+    .checkbox-row { display:flex; align-items:center; gap:9px; margin-top:15px; }
+    .checkbox-row input { width:auto; }
+    .checkbox-row label { display:inline; margin:0; }
 
     @media(max-width:650px) {
-      .detail-card {
-        grid-template-columns: 1fr;
-      }
+      .detail-card { grid-template-columns:1fr; }
+      .form-grid { grid-template-columns:1fr; gap:0; }
     }
   </style>
 </head>
 
 <body>
-
   <main class="detail-container">
     <a class="back-link" href="index.html">← Back to Store</a>
     <div id="product-detail">Loading product...</div>
@@ -150,17 +93,18 @@
   <script>
     function escapeHTML(value) {
       return String(value ?? "").replace(/[&<>"']/g, c => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
+        "&":"&amp;", "<":"&lt;", ">":"&gt;",
+        '"':"&quot;", "'":"&#39;"
       }[c]));
+    }
+
+    function money(value) {
+      return Number(value || 0).toLocaleString("en-PK");
     }
 
     async function loadProductDetail() {
       const container = document.getElementById("product-detail");
-      const id = new URLSearchParams(window.location.search).get("id");
+      const id = new URLSearchParams(location.search).get("id");
 
       if (!id) {
         container.innerText = "Product not found.";
@@ -182,56 +126,28 @@
 
       document.title = product.name + " | Z.Shopping Mall.pk";
 
-      const originalPrice = Number(product.original_price || 0);
-      const salePrice = Number(product.price || 0);
+      const price = Number(product.price || 0);
+      const original = Number(product.original_price || 0);
       const discount = Number(product.discount_percent || 0);
 
-      let priceHTML = "";
+      const priceHTML = discount > 0 && original > price
+        ? `<span class="old-price">Rs. ${money(original)}</span>
+           <span class="sale-price">Rs. ${money(price)}</span>
+           <br><span class="sale-badge">SALE - ${discount}% OFF</span>`
+        : `<span class="sale-price" style="color:#198754">Rs. ${money(price)}</span>`;
 
-      if (discount > 0 && originalPrice > salePrice) {
-        priceHTML = `
-          <div>
-            <span class="old-price">
-              Rs. ${originalPrice.toLocaleString("en-PK")}
-            </span>
-            <span class="sale-price">
-              Rs. ${salePrice.toLocaleString("en-PK")}
-            </span>
-            <br>
-            <span class="sale-badge">
-              SALE - ${discount}% OFF
-            </span>
-          </div>
-        `;
-      } else {
-        priceHTML = `
-          <span class="sale-price" style="color:#198754;">
-            Rs. ${salePrice.toLocaleString("en-PK")}
-          </span>
-        `;
+      let media = Array.isArray(product.media_urls) ? product.media_urls : [];
+
+      if (!media.length && product.image_url) {
+        media = [{ type:"image", url:product.image_url }];
       }
 
-      let media = Array.isArray(product.media_urls)
-        ? product.media_urls
-        : [];
-
-      if (media.length === 0 && product.image_url) {
-        media = [{
-          type: "image",
-          url: product.image_url
-        }];
-      }
-
-      if (media.length === 0) {
-        media = [{
-          type: "image",
-          url: "https://placehold.co/600x450?text=Product"
-        }];
+      if (!media.length) {
+        media = [{ type:"image", url:"https://placehold.co/600x450?text=Product" }];
       }
 
       container.innerHTML = `
         <article class="detail-card">
-
           <div>
             <div id="main-media" class="main-media"></div>
             <div id="media-gallery" class="media-gallery"></div>
@@ -239,31 +155,106 @@
 
           <div class="detail-info">
             <h1>${escapeHTML(product.name)}</h1>
+            <div class="detail-price">${priceHTML}</div>
 
-            <div class="detail-price">
-              ${priceHTML}
-            </div>
-
-            <p>
-              <strong>Availability:</strong>
+            <p><strong>Availability:</strong>
               ${Number(product.stock) > 0 ? "In Stock" : "Out of Stock"}
             </p>
 
             <h3>Product Details</h3>
-
             <div class="detail-description">
               ${escapeHTML(product.description || "No description available.")}
             </div>
-
-            <br>
-
-            <button id="add-detail-cart"
-              ${Number(product.stock) <= 0 ? "disabled" : ""}>
-              Add to Cart
-            </button>
           </div>
-
         </article>
+
+        <section class="order-section" id="order-form-section">
+          <h2>Complete Your Order</h2>
+          <p>اپنی معلومات درج کریں اور اپنا آرڈر مکمل کریں۔</p>
+
+          <form id="direct-order-form">
+            <h3>Customer Information</h3>
+
+            <div class="form-grid">
+              <div>
+                <label for="customer-name">Full Name *</label>
+                <input id="customer-name" required maxlength="100" placeholder="Your full name">
+              </div>
+              <div>
+                <label for="customer-phone">Mobile Number *</label>
+                <input id="customer-phone" type="tel" required maxlength="20" placeholder="03XXXXXXXXX">
+              </div>
+            </div>
+
+            <label for="alternate-phone">Alternate Mobile Number</label>
+            <input id="alternate-phone" type="tel" maxlength="20" placeholder="Optional">
+
+            <h3>Delivery Address</h3>
+
+            <div class="form-grid">
+              <div>
+                <label for="customer-city">City *</label>
+                <input id="customer-city" required maxlength="80" placeholder="Enter your city">
+              </div>
+              <div>
+                <label for="customer-area">Sector / Block / Area *</label>
+                <input id="customer-area" required maxlength="120" placeholder="Enter your area">
+              </div>
+            </div>
+
+            <label for="customer-address">Complete Address *</label>
+            <textarea id="customer-address" required maxlength="500"
+              placeholder="House number, street, road and complete address"></textarea>
+
+            <label for="nearby-place">Nearby Famous Place</label>
+            <input id="nearby-place" maxlength="150" placeholder="Optional">
+
+            <label for="address-type">Save Address As</label>
+            <select id="address-type">
+              <option value="Home">Home</option>
+              <option value="Work">Work</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <div class="checkbox-row">
+              <input type="checkbox" id="default-address">
+              <label for="default-address">Save as my default address on this device</label>
+            </div>
+
+            <h3>Order Quantity</h3>
+            <label for="order-quantity">Quantity *</label>
+            <input type="number" id="order-quantity" value="1" min="1"
+              max="${Math.max(0, Number(product.stock))}" required>
+
+            <div class="order-summary">
+              <p><strong>Product:</strong> ${escapeHTML(product.name)}</p>
+              <p><strong>Unit Price:</strong> Rs. ${money(price)}</p>
+              <p><strong>Quantity:</strong> <span id="summary-quantity">1</span></p>
+              <p><strong>Total:</strong> Rs. <span id="summary-total">${money(price)}</span></p>
+            </div>
+
+            <h3>Payment Method</h3>
+            <label for="payment-method">Select Payment Method *</label>
+            <select id="payment-method" required>
+              <option value="COD">Cash on Delivery</option>
+              <option value="Easypaisa">Easypaisa</option>
+              <option value="JazzCash">JazzCash</option>
+              <option value="Bank Transfer">MCB Bank Transfer</option>
+            </select>
+
+            <div id="payment-details" class="payment-details">
+              <h3 id="payment-title"></h3>
+              <p id="payment-account"></p>
+              <p><strong>Account Title:</strong> Muhammad Zubair</p>
+              <p>ادائیگی کرنے کے بعد رسید محفوظ رکھیں۔</p>
+            </div>
+
+            <button class="place-order-btn" id="place-order-btn" type="submit"
+              ${Number(product.stock) <= 0 ? "disabled" : ""}>
+              ${Number(product.stock) <= 0 ? "Out of Stock" : "Place Order"}
+            </button>
+          </form>
+        </section>
       `;
 
       const mainMedia = document.getElementById("main-media");
@@ -274,31 +265,24 @@
 
         if (item.type === "video") {
           mainMedia.innerHTML = `
-            <video controls autoplay playsinline
-              style="width:100%;max-height:450px;border-radius:10px;">
+            <video controls playsinline style="width:100%;max-height:450px;border-radius:10px;">
               <source src="${escapeHTML(item.url)}">
-              Your browser does not support video.
-            </video>
-          `;
+            </video>`;
         } else {
           mainMedia.innerHTML = `
-            <img src="${escapeHTML(item.url)}"
-              alt="${escapeHTML(product.name)}"
-              style="width:100%;max-height:450px;object-fit:contain;border-radius:10px;">
-          `;
+            <img src="${escapeHTML(item.url)}" alt="${escapeHTML(product.name)}">`;
         }
 
-        document.querySelectorAll(".media-thumb, .video-thumb")
-          .forEach((thumb, i) => {
-            thumb.classList.toggle("active", i === index);
-          });
+        document.querySelectorAll(".media-thumb,.video-thumb").forEach((thumb, i) => {
+          thumb.classList.toggle("active", i === index);
+        });
       }
 
       media.forEach((item, index) => {
         if (item.type === "video") {
           const thumb = document.createElement("div");
           thumb.className = "video-thumb";
-          thumb.innerHTML = "▶";
+          thumb.textContent = "▶";
           thumb.title = "Play Video";
           thumb.onclick = () => showMedia(index);
           gallery.appendChild(thumb);
@@ -314,24 +298,162 @@
 
       showMedia(0);
 
-      document.getElementById("add-detail-cart").addEventListener("click", () => {
-        let cart = JSON.parse(localStorage.getItem("zmart_cart") || "[]");
+      const quantityInput = document.getElementById("order-quantity");
 
-        const existing = cart.find(p => String(p.id) === String(product.id));
+      function updateSummary() {
+        let quantity = Math.max(1, Number(quantityInput.value) || 1);
+        quantity = Math.min(quantity, Number(product.stock));
+        quantityInput.value = quantity;
+        document.getElementById("summary-quantity").textContent = quantity;
+        document.getElementById("summary-total").textContent = money(price * quantity);
+      }
 
-        if (existing) {
-          if (existing.quantity >= product.stock) {
-            alert("Available stock limit reached.");
-            return;
-          }
-          Object.assign(existing, product);
-          existing.quantity++;
-        } else {
-          cart.push({...product, quantity: 1});
+      quantityInput.addEventListener("input", updateSummary);
+
+      const paymentMethod = document.getElementById("payment-method");
+      const paymentDetails = document.getElementById("payment-details");
+
+      function showPaymentDetails() {
+        const accounts = {
+          Easypaisa: ["Easypaisa Payment", "Account Number: 03026790033"],
+          JazzCash: ["JazzCash Payment", "Account Number: 03026790033"],
+          "Bank Transfer": ["MCB Bank Limited", "Account Number: 1730592991004169"]
+        };
+
+        const details = accounts[paymentMethod.value];
+
+        if (!details) {
+          paymentDetails.style.display = "none";
+          return;
         }
 
-        localStorage.setItem("zmart_cart", JSON.stringify(cart));
-        alert("Product added to cart!");
+        document.getElementById("payment-title").textContent = details[0];
+        document.getElementById("payment-account").textContent = details[1];
+        paymentDetails.style.display = "block";
+      }
+
+      paymentMethod.addEventListener("change", showPaymentDetails);
+      showPaymentDetails();
+
+      // Previously saved address can be loaded on this device
+      const savedAddress = localStorage.getItem("zmart_default_address");
+
+      if (savedAddress) {
+        try {
+          const a = JSON.parse(savedAddress);
+          document.getElementById("customer-name").value = a.name || "";
+          document.getElementById("customer-phone").value = a.phone || "";
+          document.getElementById("alternate-phone").value = a.alternatePhone || "";
+          document.getElementById("customer-city").value = a.city || "";
+          document.getElementById("customer-area").value = a.area || "";
+          document.getElementById("customer-address").value = a.address || "";
+          document.getElementById("nearby-place").value = a.nearby || "";
+          document.getElementById("address-type").value = a.type || "Home";
+          document.getElementById("default-address").checked = true;
+        } catch (e) {
+          console.error("Saved address could not be loaded", e);
+        }
+      }
+
+      document.getElementById("direct-order-form").addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const button = document.getElementById("place-order-btn");
+        const name = document.getElementById("customer-name").value.trim();
+        const phone = document.getElementById("customer-phone").value.trim();
+        const alternatePhone = document.getElementById("alternate-phone").value.trim();
+        const city = document.getElementById("customer-city").value.trim();
+        const area = document.getElementById("customer-area").value.trim();
+        const address = document.getElementById("customer-address").value.trim();
+        const nearby = document.getElementById("nearby-place").value.trim();
+        const addressType = document.getElementById("address-type").value;
+        const quantity = Number(quantityInput.value);
+        const method = paymentMethod.value;
+
+        if (!name || !phone || !city || !area || !address) {
+          alert("Please complete all required information.");
+          return;
+        }
+
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > Number(product.stock)) {
+          alert("Please enter a valid quantity within available stock.");
+          return;
+        }
+
+        const fullAddress =
+          `Area: ${area}\nAddress: ${address}\nNearby Place: ${nearby}\nAddress Type: ${addressType}\nAlternate Phone: ${alternatePhone}`;
+
+        const total = price * quantity;
+
+        const items = [{
+          product_id: product.id,
+          product_name: product.name,
+          quantity: quantity,
+          unit_price: price,
+          subtotal: total
+        }];
+
+        button.disabled = true;
+        button.textContent = "Processing Order...";
+
+        try {
+          const { data, error } = await supabaseClient.rpc("place_order", {
+            p_customer_name: name,
+            p_phone: phone,
+            p_city: city,
+            p_address: fullAddress,
+            p_items: items,
+            p_payment_method: method
+          });
+
+          if (error) {
+            console.error(error);
+            alert("Order could not be saved: " + error.message);
+            return;
+          }
+
+          if (document.getElementById("default-address").checked) {
+            localStorage.setItem("zmart_default_address", JSON.stringify({
+              name, phone, alternatePhone, city, area, address, nearby, type:addressType
+            }));
+          }
+
+          const orderNumber = data.order_number;
+
+          let message = `New Order - Z.Shopping Mall.pk\n`;
+          message += `Order Number: ${orderNumber}\n`;
+          message += `Customer: ${name}\nPhone: ${phone}\n`;
+          message += `Alternate Phone: ${alternatePhone}\n`;
+          message += `City: ${city}\nArea: ${area}\n`;
+          message += `Address: ${address}\nNearby Place: ${nearby}\n`;
+          message += `Address Type: ${addressType}\n`;
+          message += `Payment Method: ${method}\n\n`;
+          message += `Product: ${product.name}\n`;
+          message += `Quantity: ${quantity}\n`;
+          message += `Unit Price: Rs. ${price}\n`;
+          message += `Total: Rs. ${total}\n`;
+
+          if (method !== "COD") {
+            message += "Payment Status: Awaiting payment verification";
+          }
+
+          const whatsappLink =
+            `https://wa.me/923026790033?text=${encodeURIComponent(message)}`;
+
+          alert("Your order has been saved successfully! Order Number: " + orderNumber);
+          window.open(whatsappLink, "_blank");
+
+          button.textContent = "Order Placed Successfully";
+
+        } catch (err) {
+          console.error(err);
+          alert("Something went wrong. Please try again.");
+        } finally {
+          if (button.textContent !== "Order Placed Successfully") {
+            button.disabled = false;
+            button.textContent = "Place Order";
+          }
+        }
       });
     }
 
