@@ -7,12 +7,14 @@
   <title>Product Details | Z.Shopping Mall.pk</title>
   <meta name="description" content="View product details at Z.Shopping Mall.pk">
   <link rel="stylesheet" href="style.css">
+
   <style>
     .detail-container {
       max-width: 1000px;
       margin: 40px auto;
       padding: 20px;
     }
+
     .detail-card {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -22,22 +24,69 @@
       padding: 25px;
       border-radius: 12px;
     }
-    .detail-card img {
+
+    .main-media {
+      width: 100%;
+      min-height: 300px;
+    }
+
+    .main-media img,
+    .main-media video {
       width: 100%;
       max-height: 450px;
       object-fit: contain;
       border-radius: 10px;
     }
-    .detail-info h1 { margin-top: 0; }
+
+    .media-gallery {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .media-thumb {
+      width: 75px;
+      height: 75px;
+      object-fit: cover;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .media-thumb.active {
+      border-color: #198754;
+    }
+
+    .video-thumb {
+      width: 75px;
+      height: 75px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      background: #222;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+    }
+
+    .detail-info h1 {
+      margin-top: 0;
+    }
+
     .detail-price {
       font-size: 25px;
       font-weight: bold;
       margin: 15px 0;
     }
+
     .detail-description {
       line-height: 1.8;
       white-space: pre-wrap;
     }
+
     .detail-info button {
       padding: 12px 22px;
       cursor: pointer;
@@ -47,15 +96,25 @@
       color: white;
       font-size: 16px;
     }
+
+    .detail-info button:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+
     .back-link {
       display: inline-block;
       margin-bottom: 20px;
     }
+
     @media(max-width:650px) {
-      .detail-card { grid-template-columns: 1fr; }
+      .detail-card {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <main class="detail-container">
@@ -65,11 +124,15 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
+
   <script>
     function escapeHTML(value) {
       return String(value ?? "").replace(/[&<>"']/g, c => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;",
-        '"': "&quot;", "'": "&#39;"
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
       }[c]));
     }
 
@@ -84,7 +147,7 @@
 
       const { data: product, error } = await supabaseClient
         .from("products")
-        .select("id,name,description,price,image_url,stock")
+        .select("id,name,description,price,image_url,stock,media_urls")
         .eq("id", id)
         .eq("is_active", true)
         .maybeSingle();
@@ -97,35 +160,112 @@
 
       document.title = product.name + " | Z.Shopping Mall.pk";
 
-      const image = product.image_url ||
-        "https://placehold.co/600x450?text=Product";
+      let media = Array.isArray(product.media_urls)
+        ? product.media_urls
+        : [];
+
+      if (media.length === 0 && product.image_url) {
+        media = [{
+          type: "image",
+          url: product.image_url
+        }];
+      }
+
+      if (media.length === 0) {
+        media = [{
+          type: "image",
+          url: "https://placehold.co/600x450?text=Product"
+        }];
+      }
 
       container.innerHTML = `
         <article class="detail-card">
-          <img src="${escapeHTML(image)}" alt="${escapeHTML(product.name)}">
+
+          <div>
+            <div id="main-media" class="main-media"></div>
+            <div id="media-gallery" class="media-gallery"></div>
+          </div>
+
           <div class="detail-info">
             <h1>${escapeHTML(product.name)}</h1>
+
             <div class="detail-price">
               Rs. ${Number(product.price).toLocaleString("en-PK")}
             </div>
-            <p><strong>Availability:</strong>
+
+            <p>
+              <strong>Availability:</strong>
               ${Number(product.stock) > 0 ? "In Stock" : "Out of Stock"}
             </p>
+
             <h3>Product Details</h3>
+
             <div class="detail-description">
               ${escapeHTML(product.description || "No description available.")}
             </div>
+
             <br>
+
             <button id="add-detail-cart"
               ${Number(product.stock) <= 0 ? "disabled" : ""}>
               Add to Cart
             </button>
           </div>
+
         </article>
       `;
 
+      const mainMedia = document.getElementById("main-media");
+      const gallery = document.getElementById("media-gallery");
+
+      function showMedia(index) {
+        const item = media[index];
+
+        if (item.type === "video") {
+          mainMedia.innerHTML = `
+            <video controls autoplay playsinline
+              style="width:100%;max-height:450px;border-radius:10px;">
+              <source src="${escapeHTML(item.url)}">
+              Your browser does not support video.
+            </video>
+          `;
+        } else {
+          mainMedia.innerHTML = `
+            <img src="${escapeHTML(item.url)}"
+              alt="${escapeHTML(product.name)}"
+              style="width:100%;max-height:450px;object-fit:contain;border-radius:10px;">
+          `;
+        }
+
+        document.querySelectorAll(".media-thumb, .video-thumb")
+          .forEach((thumb, i) => {
+            thumb.classList.toggle("active", i === index);
+          });
+      }
+
+      media.forEach((item, index) => {
+        if (item.type === "video") {
+          const thumb = document.createElement("div");
+          thumb.className = "video-thumb";
+          thumb.innerHTML = "▶";
+          thumb.title = "Play Video";
+          thumb.onclick = () => showMedia(index);
+          gallery.appendChild(thumb);
+        } else {
+          const thumb = document.createElement("img");
+          thumb.src = item.url;
+          thumb.alt = "Product image";
+          thumb.className = "media-thumb";
+          thumb.onclick = () => showMedia(index);
+          gallery.appendChild(thumb);
+        }
+      });
+
+      showMedia(0);
+
       document.getElementById("add-detail-cart").addEventListener("click", () => {
         let cart = JSON.parse(localStorage.getItem("zmart_cart") || "[]");
+
         const existing = cart.find(p => String(p.id) === String(product.id));
 
         if (existing) {
