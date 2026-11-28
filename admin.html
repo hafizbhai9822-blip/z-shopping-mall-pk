@@ -24,7 +24,7 @@ button:disabled { opacity:.6; cursor:not-allowed; }
 .chat-from-customer { background:#e9f1ff; }
 .chat-from-admin { background:#d9fdd3; }
 #chat-conversation { max-height:400px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:8px; }
-#imagePreview { display:none; max-width:220px; max-height:220px; object-fit:contain; margin:10px 0; border-radius:8px; }
+.preview-img { width:100px;height:100px;object-fit:cover;margin:5px;border-radius:8px; }
 </style>
 </head>
 
@@ -68,10 +68,14 @@ button:disabled { opacity:.6; cursor:not-allowed; }
 <input id="pprice" type="number" placeholder="Price (Rs.)">
 <input id="pstock" type="number" placeholder="Stock Quantity">
 
-<label><strong>Choose Product Image</strong></label>
-<input id="pimageFile" type="file" accept="image/*">
-<img id="imagePreview" alt="Image Preview">
-<p id="imageMessage">Select an image from your computer.</p>
+<label><strong>Choose Product Images (Maximum 10)</strong></label>
+<input id="pimageFiles" type="file" accept="image/*" multiple>
+<div id="imagePreview"></div>
+<p id="imageMessage">Select up to 10 images. Maximum 5 MB each.</p>
+
+<label><strong>Choose Product Video (Optional)</strong></label>
+<input id="pvideoFile" type="file" accept="video/*">
+<p id="videoMessage">Select one video. Maximum 20 MB.</p>
 
 <select id="pcategory">
 <option value="">Select Category</option>
@@ -110,33 +114,59 @@ function escapeHTML(value) {
 }
 
 // IMAGE PREVIEW
-document.getElementById("pimageFile").addEventListener("change", function() {
-  const file = this.files[0];
+document.getElementById("pimageFiles").addEventListener("change", function() {
+  const files = Array.from(this.files);
   const preview = document.getElementById("imagePreview");
   const message = document.getElementById("imageMessage");
 
+  preview.innerHTML = "";
+
+  if (!files.length) {
+    message.innerText = "Select up to 10 images. Maximum 5 MB each.";
+    return;
+  }
+
+  if (files.length > 10) {
+    this.value = "";
+    message.innerText = "You can select maximum 10 images.";
+    return;
+  }
+
+  for (const file of files) {
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      this.value = "";
+      preview.innerHTML = "";
+      message.innerText = "Each image must be valid and smaller than 5 MB.";
+      return;
+    }
+  }
+
+  files.forEach(file => {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    img.className = "preview-img";
+    preview.appendChild(img);
+  });
+
+  message.innerText = files.length + " image(s) selected.";
+});
+
+// VIDEO VALIDATION
+document.getElementById("pvideoFile").addEventListener("change", function() {
+  const file = this.files[0];
+  const message = document.getElementById("videoMessage");
+
   if (!file) {
-    preview.style.display = "none";
-    message.innerText = "Select an image from your computer.";
+    message.innerText = "Select one video. Maximum 20 MB.";
     return;
   }
 
-  if (!file.type.startsWith("image/")) {
+  if (!file.type.startsWith("video/") || file.size > 20 * 1024 * 1024) {
     this.value = "";
-    preview.style.display = "none";
-    message.innerText = "Please select an image file.";
+    message.innerText = "Video must be valid and smaller than 20 MB.";
     return;
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    this.value = "";
-    preview.style.display = "none";
-    message.innerText = "Image must be smaller than 5 MB.";
-    return;
-  }
-
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = "block";
   message.innerText = file.name;
 });
 
@@ -361,17 +391,15 @@ async function loadCategories() {
   });
 }
 
-// UPLOAD IMAGE TO SUPABASE STORAGE
-async function uploadProductImage(file) {
+// UPLOAD MEDIA
+async function uploadProductMedia(file) {
   const extension = file.name.split(".").pop().toLowerCase();
   const fileName = Date.now() + "-" +
     Math.random().toString(36).slice(2) + "." + extension;
 
-  const filePath = fileName;
-
   const { error } = await supabaseClient.storage
     .from("product-images")
-    .upload(filePath, file, {
+    .upload(fileName, file, {
       cacheControl: "3600",
       upsert: false,
       contentType: file.type
@@ -381,7 +409,7 @@ async function uploadProductImage(file) {
 
   const { data } = supabaseClient.storage
     .from("product-images")
-    .getPublicUrl(filePath);
+    .getPublicUrl(fileName);
 
   return data.publicUrl;
 }
@@ -392,7 +420,8 @@ async function addProduct() {
   const description = document.getElementById("pdesc").value.trim();
   const price = Number(document.getElementById("pprice").value);
   const stock = Number(document.getElementById("pstock").value);
-  const file = document.getElementById("pimageFile").files[0];
+  const files = Array.from(document.getElementById("pimageFiles").files);
+  const videoFile = document.getElementById("pvideoFile").files[0];
   const category = document.getElementById("pcategory").value;
   const message = document.getElementById("productMessage");
   const button = document.getElementById("addProductButton");
@@ -405,21 +434,52 @@ async function addProduct() {
     return;
   }
 
-  if (!file) {
-    message.innerText = "Please choose a product image.";
+  if (!files.length) {
+    message.innerText = "Please choose at least one product image.";
     return;
   }
 
-  if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
-    message.innerText = "Choose a valid image smaller than 5 MB.";
+  if (files.length > 10) {
+    message.innerText = "Maximum 10 images allowed.";
+    return;
+  }
+
+  for (const file of files) {
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      message.innerText = "Each image must be valid and smaller than 5 MB.";
+      return;
+    }
+  }
+
+  if (videoFile && (!videoFile.type.startsWith("video/") ||
+      videoFile.size > 20 * 1024 * 1024)) {
+    message.innerText = "Video must be valid and smaller than 20 MB.";
     return;
   }
 
   button.disabled = true;
-  message.innerText = "Uploading image...";
 
   try {
-    const imageUrl = await uploadProductImage(file);
+    const media = [];
+
+    message.innerText = "Uploading images...";
+
+    for (const file of files) {
+      const url = await uploadProductMedia(file);
+      media.push({
+        type: "image",
+        url
+      });
+    }
+
+    if (videoFile) {
+      message.innerText = "Uploading video...";
+      const videoUrl = await uploadProductMedia(videoFile);
+      media.push({
+        type: "video",
+        url: videoUrl
+      });
+    }
 
     message.innerText = "Saving product...";
 
@@ -428,23 +488,26 @@ async function addProduct() {
       description,
       price,
       stock,
-      image_url: imageUrl,
+      image_url: media[0].url,
+      media_urls: media,
       category_id: category ? Number(category) : null,
       is_active: true
     });
 
     if (error) throw error;
 
-    message.innerText = "Product and image added successfully!";
+    message.innerText = "Product and media added successfully!";
 
-    ["pname", "pdesc", "pprice", "pstock", "pimageFile", "pcategory"]
+    ["pname", "pdesc", "pprice", "pstock", "pimageFiles", "pvideoFile", "pcategory"]
       .forEach(id => {
         document.getElementById(id).value = "";
       });
 
-    document.getElementById("imagePreview").style.display = "none";
+    document.getElementById("imagePreview").innerHTML = "";
     document.getElementById("imageMessage").innerText =
-      "Select an image from your computer.";
+      "Select up to 10 images. Maximum 5 MB each.";
+    document.getElementById("videoMessage").innerText =
+      "Select one video. Maximum 20 MB.";
 
     await loadProducts();
 
@@ -460,7 +523,7 @@ async function addProduct() {
 async function loadProducts() {
   const { data, error } = await supabaseClient
     .from("products")
-    .select("id,name,price,stock,image_url,is_active,categories(name)")
+    .select("id,name,price,stock,image_url,media_urls,is_active,categories(name)")
     .order("created_at", { ascending: false });
 
   const list = document.getElementById("productList");
@@ -481,6 +544,7 @@ async function loadProducts() {
       <strong>${escapeHTML(p.name)}</strong>
       <p>Price: Rs. ${Number(p.price).toLocaleString()}</p>
       <p>Stock: ${p.stock}</p>
+      <p>Media files: ${(p.media_urls || []).length}</p>
       <p>Category: ${escapeHTML(p.categories?.name || "None")}</p>
       <button class="delete" onclick="deleteProduct(${JSON.stringify(p.id)})">Delete</button>
     </div>
@@ -625,27 +689,23 @@ async function updateOrder(id) {
   await loadOrders();
 }
 
-// DELETE ORDER - VERIFY ACTUAL DELETION
+// DELETE ORDER
 async function deleteOrder(id) {
   if (!confirm("Are you sure you want to permanently delete this order and its products?")) {
     return;
   }
 
   try {
-    // Delete order items first and verify the result
-    const { data: deletedItems, error: itemsError } = await supabaseClient
+    const { error: itemsError } = await supabaseClient
       .from("order_items")
       .delete()
-      .eq("order_id", id)
-      .select("order_id");
+      .eq("order_id", id);
 
     if (itemsError) {
       alert("Could not delete order products: " + itemsError.message);
-      console.error("Order items delete error:", itemsError);
       return;
     }
 
-    // Delete the order and ask Supabase to return its ID
     const { data: deletedOrder, error: orderError } = await supabaseClient
       .from("orders")
       .delete()
@@ -654,14 +714,11 @@ async function deleteOrder(id) {
 
     if (orderError) {
       alert("Could not delete order: " + orderError.message);
-      console.error("Order delete error:", orderError);
       return;
     }
 
-    // A successful HTTP response can still delete zero rows
     if (!deletedOrder || deletedOrder.length === 0) {
-      alert("Order was NOT deleted. Supabase returned zero deleted rows. Please check the DELETE policy.");
-      console.error("No order deleted. Order ID:", id);
+      alert("Order was NOT deleted. Please check the DELETE policy.");
       return;
     }
 
@@ -670,7 +727,6 @@ async function deleteOrder(id) {
 
   } catch (error) {
     alert("Unexpected error: " + error.message);
-    console.error("Delete order exception:", error);
   }
 }
 </script>
