@@ -25,6 +25,10 @@ button:disabled { opacity:.6; cursor:not-allowed; }
 .chat-from-admin { background:#d9fdd3; }
 #chat-conversation { max-height:400px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:8px; }
 .preview-img { width:100px;height:100px;object-fit:cover;margin:5px;border-radius:8px; }
+.sale-preview { background:#fff3f3; padding:12px; border-radius:8px; margin:10px 0; }
+.sale-preview del { color:#777; margin-right:10px; }
+.sale-price { color:#198754; font-size:22px; font-weight:bold; }
+.sale-badge { display:inline-block; background:#e53935; color:white; padding:5px 10px; border-radius:5px; font-weight:bold; }
 </style>
 </head>
 
@@ -65,8 +69,20 @@ button:disabled { opacity:.6; cursor:not-allowed; }
 
 <input id="pname" placeholder="Product Name">
 <textarea id="pdesc" placeholder="Product Description"></textarea>
-<input id="pprice" type="number" placeholder="Price (Rs.)">
-<input id="pstock" type="number" placeholder="Stock Quantity">
+
+<label><strong>Original Price (Rs.)</strong></label>
+<input id="pprice" type="number" min="0" step="0.01" placeholder="Original Price">
+
+<label><strong>Discount Percentage (%)</strong></label>
+<input id="pdiscount" type="number" min="0" max="99" step="0.01" value="0" placeholder="Discount %">
+
+<div class="sale-preview" id="salePreview">
+<strong>Price Preview:</strong>
+<p>Original Price: Rs. 0</p>
+<p>Sale Price: <span class="sale-price">Rs. 0</span></p>
+</div>
+
+<input id="pstock" type="number" min="0" placeholder="Stock Quantity">
 
 <label><strong>Choose Product Images (Maximum 10)</strong></label>
 <input id="pimageFiles" type="file" accept="image/*" multiple>
@@ -112,6 +128,43 @@ function escapeHTML(value) {
     "'": "&#39;"
   }[char]));
 }
+
+// DISCOUNT PRICE PREVIEW
+function calculateSalePrice(originalPrice, discount) {
+  return Math.round((originalPrice * (1 - discount / 100)) * 100) / 100;
+}
+
+function updateSalePreview() {
+  const original = Number(document.getElementById("pprice").value) || 0;
+  const discount = Number(document.getElementById("pdiscount").value) || 0;
+  const preview = document.getElementById("salePreview");
+
+  if (discount < 0 || discount > 99) {
+    preview.innerHTML = "<strong style='color:red'>Discount must be between 0 and 99%.</strong>";
+    return;
+  }
+
+  const sale = calculateSalePrice(original, discount);
+
+  if (discount > 0) {
+    preview.innerHTML = `
+      <strong>Price Preview:</strong>
+      <p>Original Price: <del>Rs. ${original.toLocaleString("en-PK")}</del></p>
+      <p>Discount: <strong>${discount}% OFF</strong></p>
+      <p>Sale Price: <span class="sale-price">Rs. ${sale.toLocaleString("en-PK")}</span></p>
+      <span class="sale-badge">SALE</span>
+    `;
+  } else {
+    preview.innerHTML = `
+      <strong>Price Preview:</strong>
+      <p>Sale Price: <span class="sale-price">Rs. ${original.toLocaleString("en-PK")}</span></p>
+      <p>No discount</p>
+    `;
+  }
+}
+
+document.getElementById("pprice").addEventListener("input", updateSalePreview);
+document.getElementById("pdiscount").addEventListener("input", updateSalePreview);
 
 // IMAGE PREVIEW
 document.getElementById("pimageFiles").addEventListener("change", function() {
@@ -418,7 +471,12 @@ async function uploadProductMedia(file) {
 async function addProduct() {
   const name = document.getElementById("pname").value.trim();
   const description = document.getElementById("pdesc").value.trim();
-  const price = Number(document.getElementById("pprice").value);
+
+  const originalPrice = Number(document.getElementById("pprice").value);
+  const discount = Number(document.getElementById("pdiscount").value);
+
+  const salePrice = calculateSalePrice(originalPrice, discount);
+
   const stock = Number(document.getElementById("pstock").value);
   const files = Array.from(document.getElementById("pimageFiles").files);
   const videoFile = document.getElementById("pvideoFile").files[0];
@@ -426,11 +484,14 @@ async function addProduct() {
   const message = document.getElementById("productMessage");
   const button = document.getElementById("addProductButton");
 
-  if (!name || document.getElementById("pprice").value === "" ||
-      !Number.isFinite(price) || price < 0 ||
+  if (!name ||
+      document.getElementById("pprice").value === "" ||
+      !Number.isFinite(originalPrice) || originalPrice < 0 ||
+      document.getElementById("pdiscount").value === "" ||
+      !Number.isFinite(discount) || discount < 0 || discount > 99 ||
       document.getElementById("pstock").value === "" ||
       !Number.isInteger(stock) || stock < 0) {
-    message.innerText = "Please enter a valid name, price and stock.";
+    message.innerText = "Please enter a valid name, price, discount and stock.";
     return;
   }
 
@@ -483,32 +544,42 @@ async function addProduct() {
 
     message.innerText = "Saving product...";
 
-    const { error } = await supabaseClient.from("products").insert({
+    const productData = {
       name,
       description,
-      price,
+      price: salePrice,
+      original_price: discount > 0 ? originalPrice : null,
+      discount_percent: discount,
       stock,
       image_url: media[0].url,
       media_urls: media,
       category_id: category ? Number(category) : null,
       is_active: true
-    });
+    };
+
+    const { error } = await supabaseClient
+      .from("products")
+      .insert(productData);
 
     if (error) throw error;
 
     message.innerText = "Product and media added successfully!";
 
-    ["pname", "pdesc", "pprice", "pstock", "pimageFiles", "pvideoFile", "pcategory"]
-      .forEach(id => {
-        document.getElementById(id).value = "";
-      });
+    [
+      "pname", "pdesc", "pprice", "pdiscount",
+      "pstock", "pimageFiles", "pvideoFile", "pcategory"
+    ].forEach(id => {
+      document.getElementById(id).value = "";
+    });
 
+    document.getElementById("pdiscount").value = "0";
     document.getElementById("imagePreview").innerHTML = "";
     document.getElementById("imageMessage").innerText =
       "Select up to 10 images. Maximum 5 MB each.";
     document.getElementById("videoMessage").innerText =
       "Select one video. Maximum 20 MB.";
 
+    updateSalePreview();
     await loadProducts();
 
   } catch (error) {
@@ -523,7 +594,7 @@ async function addProduct() {
 async function loadProducts() {
   const { data, error } = await supabaseClient
     .from("products")
-    .select("id,name,price,stock,image_url,media_urls,is_active,categories(name)")
+    .select("id,name,price,original_price,discount_percent,stock,image_url,media_urls,is_active,categories(name)")
     .order("created_at", { ascending: false });
 
   const list = document.getElementById("productList");
@@ -538,17 +609,30 @@ async function loadProducts() {
     return;
   }
 
-  list.innerHTML = data.map(p => `
-    <div class="item">
-      ${p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="" style="width:100px;height:100px;object-fit:contain;">` : ""}
-      <strong>${escapeHTML(p.name)}</strong>
-      <p>Price: Rs. ${Number(p.price).toLocaleString()}</p>
-      <p>Stock: ${p.stock}</p>
-      <p>Media files: ${(p.media_urls || []).length}</p>
-      <p>Category: ${escapeHTML(p.categories?.name || "None")}</p>
-      <button class="delete" onclick="deleteProduct(${JSON.stringify(p.id)})">Delete</button>
-    </div>
-  `).join("");
+  list.innerHTML = data.map(p => {
+    const hasDiscount = Number(p.discount_percent) > 0;
+
+    return `
+      <div class="item">
+        ${p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="" style="width:100px;height:100px;object-fit:contain;">` : ""}
+        <strong>${escapeHTML(p.name)}</strong>
+
+        ${hasDiscount ? `
+          <p>Original Price: <del>Rs. ${Number(p.original_price).toLocaleString("en-PK")}</del></p>
+          <p>Discount: <strong>${Number(p.discount_percent)}% OFF</strong></p>
+          <p>Sale Price: <strong style="color:#198754">Rs. ${Number(p.price).toLocaleString("en-PK")}</strong></p>
+          <span class="sale-badge">SALE</span>
+        ` : `
+          <p>Price: Rs. ${Number(p.price).toLocaleString("en-PK")}</p>
+        `}
+
+        <p>Stock: ${p.stock}</p>
+        <p>Media files: ${(p.media_urls || []).length}</p>
+        <p>Category: ${escapeHTML(p.categories?.name || "None")}</p>
+        <button class="delete" onclick="deleteProduct(${JSON.stringify(p.id)})">Delete</button>
+      </div>
+    `;
+  }).join("");
 }
 
 async function deleteProduct(id) {
