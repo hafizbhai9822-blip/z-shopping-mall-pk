@@ -8,22 +8,26 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
+
 <style>
 body { background:#f1f3f6; padding:20px; }
 .box { background:white; padding:20px; margin:20px auto; max-width:1000px; border-radius:10px; }
 input, textarea, select { width:100%; padding:12px; margin:8px 0; box-sizing:border-box; }
 button { background:#14213d; color:white; padding:12px; border:0; border-radius:5px; cursor:pointer; margin:5px; }
+button:disabled { opacity:.6; cursor:not-allowed; }
 .delete { background:#c62828; }
 .item { border-bottom:1px solid #ddd; padding:15px; }
 .order-products { background:#f5f7fa; padding:12px; border-radius:8px; margin:10px 0; }
 .order-product { padding:8px 0; border-bottom:1px solid #ddd; }
 #dashboard { display:none; }
-.chat-message {padding:12px;margin:8px 0;border-radius:10px;overflow-wrap:anywhere;}
-.chat-from-customer {background:#e9f1ff;}
-.chat-from-admin {background:#d9fdd3;}
-#chat-conversation {max-height:400px;overflow-y:auto;background:#f5f5f5;padding:10px;border-radius:8px;}
+.chat-message { padding:12px; margin:8px 0; border-radius:10px; overflow-wrap:anywhere; }
+.chat-from-customer { background:#e9f1ff; }
+.chat-from-admin { background:#d9fdd3; }
+#chat-conversation { max-height:400px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:8px; }
+#imagePreview { display:none; max-width:220px; max-height:220px; object-fit:contain; margin:10px 0; border-radius:8px; }
 </style>
 </head>
+
 <body>
 
 <div class="box" id="loginBox">
@@ -35,6 +39,7 @@ button { background:#14213d; color:white; padding:12px; border:0; border-radius:
 </div>
 
 <div id="dashboard">
+
 <div class="box">
 <h1>Admin Dashboard</h1>
 <button onclick="logout()">Logout</button>
@@ -57,15 +62,22 @@ button { background:#14213d; color:white; padding:12px; border:0; border-radius:
 
 <div class="box">
 <h2>Add Product</h2>
+
 <input id="pname" placeholder="Product Name">
 <textarea id="pdesc" placeholder="Product Description"></textarea>
 <input id="pprice" type="number" placeholder="Price (Rs.)">
 <input id="pstock" type="number" placeholder="Stock Quantity">
-<input id="pimage" placeholder="Product Image URL">
+
+<label><strong>Choose Product Image</strong></label>
+<input id="pimageFile" type="file" accept="image/*">
+<img id="imagePreview" alt="Image Preview">
+<p id="imageMessage">Select an image from your computer.</p>
+
 <select id="pcategory">
 <option value="">Select Category</option>
 </select>
-<button onclick="addProduct()">Add Product</button>
+
+<button id="addProductButton" onclick="addProduct()">Add Product</button>
 <p id="productMessage"></p>
 </div>
 
@@ -78,6 +90,7 @@ button { background:#14213d; color:white; padding:12px; border:0; border-radius:
 <h2>Orders</h2>
 <div id="orderList">Loading...</div>
 </div>
+
 </div>
 
 <script>
@@ -86,6 +99,48 @@ let activeChatName = "";
 let activeChatKey = "";
 let chatConversations = [];
 
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+// IMAGE PREVIEW
+document.getElementById("pimageFile").addEventListener("change", function() {
+  const file = this.files[0];
+  const preview = document.getElementById("imagePreview");
+  const message = document.getElementById("imageMessage");
+
+  if (!file) {
+    preview.style.display = "none";
+    message.innerText = "Select an image from your computer.";
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    this.value = "";
+    preview.style.display = "none";
+    message.innerText = "Please select an image file.";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    this.value = "";
+    preview.style.display = "none";
+    message.innerText = "Image must be smaller than 5 MB.";
+    return;
+  }
+
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+  message.innerText = file.name;
+});
+
+// LOGIN
 async function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
@@ -157,7 +212,7 @@ async function loadChats() {
 
     if (!conversations[key]) {
       conversations[key] = {
-        key: key,
+        key,
         phone: msg.phone,
         name: msg.customer_name,
         lastMessage: msg.message,
@@ -168,7 +223,7 @@ async function loadChats() {
 
   chatConversations = Object.values(conversations);
 
-  if (chatConversations.length === 0) {
+  if (!chatConversations.length) {
     list.innerHTML = "<p>No new chats yet.</p>";
     return;
   }
@@ -185,7 +240,6 @@ async function loadChats() {
 
 async function openChat(index) {
   const conversation = chatConversations[index];
-
   if (!conversation) return;
 
   activeChatPhone = conversation.phone;
@@ -200,7 +254,7 @@ async function openChat(index) {
   await refreshConversation();
 
   document.getElementById("chatReplyBox").scrollIntoView({
-    behavior:"smooth"
+    behavior: "smooth"
   });
 }
 
@@ -223,7 +277,7 @@ async function refreshConversation() {
 
   box.innerHTML = "";
 
-  if (!data || data.length === 0) {
+  if (!data || !data.length) {
     box.innerText = "No messages in this conversation.";
     return;
   }
@@ -260,7 +314,7 @@ async function sendAdminReply() {
     .insert([{
       customer_name: activeChatName,
       phone: activeChatPhone,
-      message: message,
+      message,
       sender: "admin",
       chat_key: activeChatKey
     }]);
@@ -277,7 +331,7 @@ async function sendAdminReply() {
   await loadChats();
 }
 
-// PRODUCTS AND CATEGORIES
+// CATEGORIES
 async function loadCategories() {
   const { data, error } = await supabaseClient
     .from("categories")
@@ -292,7 +346,7 @@ async function loadCategories() {
   const select = document.getElementById("pcategory");
   select.innerHTML = '<option value="">Select Category</option>';
 
-  data.forEach(category => {
+  (data || []).forEach(category => {
     const option = document.createElement("option");
     option.value = category.id;
     option.textContent = category.name;
@@ -300,44 +354,102 @@ async function loadCategories() {
   });
 }
 
+// UPLOAD IMAGE TO SUPABASE STORAGE
+async function uploadProductImage(file) {
+  const extension = file.name.split(".").pop().toLowerCase();
+  const fileName = Date.now() + "-" +
+    Math.random().toString(36).slice(2) + "." + extension;
+
+  const filePath = fileName;
+
+  const { error } = await supabaseClient.storage
+    .from("product-images")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
+    });
+
+  if (error) throw error;
+
+  const { data } = supabaseClient.storage
+    .from("product-images")
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
+// ADD PRODUCT
 async function addProduct() {
   const name = document.getElementById("pname").value.trim();
   const description = document.getElementById("pdesc").value.trim();
   const price = Number(document.getElementById("pprice").value);
   const stock = Number(document.getElementById("pstock").value);
-  const image = document.getElementById("pimage").value.trim();
+  const file = document.getElementById("pimageFile").files[0];
   const category = document.getElementById("pcategory").value;
   const message = document.getElementById("productMessage");
+  const button = document.getElementById("addProductButton");
 
-  if (!name || !price || price < 0 || stock < 0) {
-    message.innerText = "Name, price and stock are required.";
+  if (!name || document.getElementById("pprice").value === "" ||
+      !Number.isFinite(price) || price < 0 ||
+      document.getElementById("pstock").value === "" ||
+      !Number.isInteger(stock) || stock < 0) {
+    message.innerText = "Please enter a valid name, price and stock.";
     return;
   }
 
-  const { error } = await supabaseClient.from("products").insert({
-    name,
-    description,
-    price,
-    stock,
-    image_url: image || null,
-    category_id: category ? Number(category) : null,
-    is_active: true
-  });
-
-  if (error) {
-    message.innerText = error.message;
+  if (!file) {
+    message.innerText = "Please choose a product image.";
     return;
   }
 
-  message.innerText = "Product added successfully!";
+  if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+    message.innerText = "Choose a valid image smaller than 5 MB.";
+    return;
+  }
 
-  ["pname","pdesc","pprice","pstock","pimage","pcategory"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
+  button.disabled = true;
+  message.innerText = "Uploading image...";
 
-  loadProducts();
+  try {
+    const imageUrl = await uploadProductImage(file);
+
+    message.innerText = "Saving product...";
+
+    const { error } = await supabaseClient.from("products").insert({
+      name,
+      description,
+      price,
+      stock,
+      image_url: imageUrl,
+      category_id: category ? Number(category) : null,
+      is_active: true
+    });
+
+    if (error) throw error;
+
+    message.innerText = "Product and image added successfully!";
+
+    ["pname", "pdesc", "pprice", "pstock", "pimageFile", "pcategory"]
+      .forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+    document.getElementById("imagePreview").style.display = "none";
+    document.getElementById("imageMessage").innerText =
+      "Select an image from your computer.";
+
+    await loadProducts();
+
+  } catch (error) {
+    message.innerText = "Error: " + error.message;
+    console.error(error);
+  } finally {
+    button.disabled = false;
+  }
 }
 
+// LOAD PRODUCTS
 async function loadProducts() {
   const { data, error } = await supabaseClient
     .from("products")
@@ -351,18 +463,19 @@ async function loadProducts() {
     return;
   }
 
-  if (!data.length) {
+  if (!data || !data.length) {
     list.innerHTML = "<p>No products yet.</p>";
     return;
   }
 
   list.innerHTML = data.map(p => `
     <div class="item">
+      ${p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="" style="width:100px;height:100px;object-fit:contain;">` : ""}
       <strong>${escapeHTML(p.name)}</strong>
       <p>Price: Rs. ${Number(p.price).toLocaleString()}</p>
       <p>Stock: ${p.stock}</p>
       <p>Category: ${escapeHTML(p.categories?.name || "None")}</p>
-      <button class="delete" onclick="deleteProduct(${p.id})">Delete</button>
+      <button class="delete" onclick="deleteProduct(${JSON.stringify(p.id)})">Delete</button>
     </div>
   `).join("");
 }
@@ -398,7 +511,7 @@ async function loadOrders() {
     return;
   }
 
-  if (!orders.length) {
+  if (!orders || !orders.length) {
     list.innerHTML = "<p>No orders yet.</p>";
     return;
   }
@@ -416,11 +529,11 @@ async function loadOrders() {
   }
 
   list.innerHTML = orders.map(o => {
-    const orderItems = items.filter(item => item.order_id === o.id);
+    const orderItems = (items || []).filter(item => item.order_id === o.id);
 
     return `
       <div class="item">
-        <h3>Order: ${o.order_number}</h3>
+        <h3>Order: ${escapeHTML(o.order_number)}</h3>
         <p><strong>Customer:</strong> ${escapeHTML(o.customer_name)}</p>
         <p><strong>Phone:</strong> ${escapeHTML(o.phone)}</p>
         <p><strong>City:</strong> ${escapeHTML(o.city)}</p>
@@ -498,16 +611,7 @@ async function updateOrder(id) {
   alert("Order status updated!");
   loadOrders();
 }
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[char]));
-}
 </script>
+
 </body>
 </html>
