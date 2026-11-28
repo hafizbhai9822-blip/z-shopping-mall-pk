@@ -13,13 +13,42 @@ function escapeHTML(value) {
   }[c]));
 }
 
+function formatPrice(price) {
+  return Number(price || 0).toLocaleString("en-PK");
+}
+
+function getDiscountHTML(product) {
+  const original = Number(product.original_price || 0);
+  const sale = Number(product.price || 0);
+  const discount = Number(product.discount_percent || 0);
+
+  if (discount > 0 && original > sale) {
+    return `
+      <div style="margin:8px 0;">
+        <span style="color:#888;text-decoration:line-through;">
+          Rs. ${formatPrice(original)}
+        </span>
+        <strong style="color:#e63946;font-size:19px;margin-left:7px;">
+          Rs. ${formatPrice(sale)}
+        </strong>
+        <span style="background:#e63946;color:white;padding:4px 7px;
+          border-radius:4px;font-size:12px;margin-left:5px;">
+          SALE ${discount}% OFF
+        </span>
+      </div>
+    `;
+  }
+
+  return `<p><strong>Rs. ${formatPrice(sale)}</strong></p>`;
+}
+
 async function loadProducts() {
   const container = document.getElementById("products");
   if (container) container.innerHTML = "Loading products...";
 
   const { data, error } = await supabaseClient
     .from("products")
-    .select("id,name,description,price,image_url,stock")
+    .select("id,name,description,price,original_price,discount_percent,image_url,stock")
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
@@ -30,7 +59,16 @@ async function loadProducts() {
   }
 
   products = data || [];
+
+  // Cart میں موجود پرانی قیمتوں کو تازہ قیمتوں سے اپڈیٹ کریں
+  cart = cart.map(item => {
+    const latest = products.find(p => String(p.id) === String(item.id));
+    return latest ? { ...latest, quantity: item.quantity } : item;
+  });
+
+  saveCart();
   showProducts();
+  updateCart();
 }
 
 function showProducts(list = products) {
@@ -43,7 +81,7 @@ function showProducts(list = products) {
   }
 
   container.innerHTML = list.map(p => `
-    <div class="product-card">
+    <div class="product-card" style="position:relative;">
       <a href="product.html?id=${encodeURIComponent(p.id)}"
          style="color:inherit;text-decoration:none;">
         <img src="${escapeHTML(p.image_url || 'https://placehold.co/400x300?text=Product')}"
@@ -51,7 +89,7 @@ function showProducts(list = products) {
         <h3>${escapeHTML(p.name)}</h3>
       </a>
 
-      <p>Rs. ${Number(p.price).toLocaleString("en-PK")}</p>
+      ${getDiscountHTML(p)}
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
         <button onclick="addToCart(${JSON.stringify(p.id)})"
@@ -81,6 +119,7 @@ function addToCart(id) {
       alert("Available stock limit reached.");
       return;
     }
+    Object.assign(existing, product);
     existing.quantity++;
   } else {
     cart.push({...product, quantity: 1});
@@ -101,6 +140,7 @@ function shopNow(id) {
       alert("Available stock limit reached.");
       return;
     }
+    Object.assign(existing, product);
     existing.quantity++;
   } else {
     cart.push({...product, quantity: 1});
@@ -110,7 +150,6 @@ function shopNow(id) {
   updateCart();
 
   const checkout = document.getElementById("checkout");
-
   if (checkout) {
     checkout.scrollIntoView({ behavior: "smooth" });
   }
@@ -151,12 +190,12 @@ function updateCart() {
   const amount = cart.reduce((s, p) => s + Number(p.price) * p.quantity, 0);
 
   if (count) count.innerText = itemCount;
-  if (total) total.innerText = amount.toLocaleString("en-PK");
+  if (total) total.innerText = formatPrice(amount);
 
   if (list) {
     list.innerHTML = cart.length ? cart.map(p => `
       <div class="cart-item">
-        ${escapeHTML(p.name)} — Rs. ${Number(p.price).toLocaleString("en-PK")}
+        ${escapeHTML(p.name)} — Rs. ${formatPrice(p.price)}
         <button onclick="changeQuantity(${JSON.stringify(p.id)},-1)">−</button>
         ${p.quantity}
         <button onclick="changeQuantity(${JSON.stringify(p.id)},1)">+</button>
