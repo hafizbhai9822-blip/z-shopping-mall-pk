@@ -53,10 +53,19 @@ function showProducts(list = products) {
 
       <p>Rs. ${Number(p.price).toLocaleString("en-PK")}</p>
 
-      <button onclick="addToCart(${JSON.stringify(p.id)})"
-        ${Number(p.stock) <= 0 ? "disabled" : ""}>
-        ${Number(p.stock) <= 0 ? "Out of Stock" : "Add to Cart"}
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button onclick="addToCart(${JSON.stringify(p.id)})"
+          ${Number(p.stock) <= 0 ? "disabled" : ""}
+          style="flex:1;">
+          ${Number(p.stock) <= 0 ? "Out of Stock" : "Add to Cart"}
+        </button>
+
+        <button onclick="shopNow(${JSON.stringify(p.id)})"
+          ${Number(p.stock) <= 0 ? "disabled" : ""}
+          style="flex:1;background:#e67e22;color:white;">
+          Shop Now
+        </button>
+      </div>
     </div>
   `).join("");
 }
@@ -79,6 +88,32 @@ function addToCart(id) {
 
   saveCart();
   updateCart();
+}
+
+function shopNow(id) {
+  const product = products.find(p => String(p.id) === String(id));
+  if (!product || product.stock <= 0) return;
+
+  const existing = cart.find(p => String(p.id) === String(id));
+
+  if (existing) {
+    if (existing.quantity >= product.stock) {
+      alert("Available stock limit reached.");
+      return;
+    }
+    existing.quantity++;
+  } else {
+    cart.push({...product, quantity: 1});
+  }
+
+  saveCart();
+  updateCart();
+
+  const checkout = document.getElementById("checkout");
+
+  if (checkout) {
+    checkout.scrollIntoView({ behavior: "smooth" });
+  }
 }
 
 function removeFromCart(id) {
