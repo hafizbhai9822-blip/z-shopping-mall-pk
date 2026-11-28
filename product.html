@@ -77,9 +77,31 @@
     }
 
     .detail-price {
-      font-size: 25px;
-      font-weight: bold;
       margin: 15px 0;
+    }
+
+    .old-price {
+      color: #888;
+      text-decoration: line-through;
+      font-size: 19px;
+      margin-right: 10px;
+    }
+
+    .sale-price {
+      color: #e63946;
+      font-size: 27px;
+      font-weight: bold;
+    }
+
+    .sale-badge {
+      display: inline-block;
+      background: #e63946;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: 8px;
     }
 
     .detail-description {
@@ -147,7 +169,7 @@
 
       const { data: product, error } = await supabaseClient
         .from("products")
-        .select("id,name,description,price,image_url,stock,media_urls")
+        .select("id,name,description,price,original_price,discount_percent,image_url,stock,media_urls")
         .eq("id", id)
         .eq("is_active", true)
         .maybeSingle();
@@ -159,6 +181,35 @@
       }
 
       document.title = product.name + " | Z.Shopping Mall.pk";
+
+      const originalPrice = Number(product.original_price || 0);
+      const salePrice = Number(product.price || 0);
+      const discount = Number(product.discount_percent || 0);
+
+      let priceHTML = "";
+
+      if (discount > 0 && originalPrice > salePrice) {
+        priceHTML = `
+          <div>
+            <span class="old-price">
+              Rs. ${originalPrice.toLocaleString("en-PK")}
+            </span>
+            <span class="sale-price">
+              Rs. ${salePrice.toLocaleString("en-PK")}
+            </span>
+            <br>
+            <span class="sale-badge">
+              SALE - ${discount}% OFF
+            </span>
+          </div>
+        `;
+      } else {
+        priceHTML = `
+          <span class="sale-price" style="color:#198754;">
+            Rs. ${salePrice.toLocaleString("en-PK")}
+          </span>
+        `;
+      }
 
       let media = Array.isArray(product.media_urls)
         ? product.media_urls
@@ -190,7 +241,7 @@
             <h1>${escapeHTML(product.name)}</h1>
 
             <div class="detail-price">
-              Rs. ${Number(product.price).toLocaleString("en-PK")}
+              ${priceHTML}
             </div>
 
             <p>
@@ -273,6 +324,7 @@
             alert("Available stock limit reached.");
             return;
           }
+          Object.assign(existing, product);
           existing.quantity++;
         } else {
           cart.push({...product, quantity: 1});
