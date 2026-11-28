@@ -573,11 +573,16 @@ async function loadOrders() {
           <option value="cancelled" ${o.status === "cancelled" ? "selected" : ""}>Cancelled</option>
         </select>
         <button onclick="updateOrder('${o.id}')">Update Status</button>
+
+        <button class="delete" onclick="deleteOrder(${JSON.stringify(o.id)})">
+          Delete Order
+        </button>
       </div>
     `;
   }).join("");
 }
 
+// UPDATE PAYMENT STATUS
 async function updatePaymentStatus(id) {
   const paymentStatus = document.getElementById("payment-status-" + id).value;
 
@@ -595,6 +600,7 @@ async function updatePaymentStatus(id) {
   loadOrders();
 }
 
+// UPDATE ORDER STATUS
 async function updateOrder(id) {
   const status = document.getElementById("status-" + id).value;
 
@@ -610,6 +616,38 @@ async function updateOrder(id) {
 
   alert("Order status updated!");
   loadOrders();
+}
+
+// DELETE ORDER
+async function deleteOrder(id) {
+  if (!confirm("Are you sure you want to permanently delete this order and its products?")) {
+    return;
+  }
+
+  // First delete the products linked to this order
+  const { error: itemsError } = await supabaseClient
+    .from("order_items")
+    .delete()
+    .eq("order_id", id);
+
+  if (itemsError) {
+    alert("Could not delete order products: " + itemsError.message);
+    return;
+  }
+
+  // Then delete the order
+  const { error } = await supabaseClient
+    .from("orders")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("Could not delete order: " + error.message);
+    return;
+  }
+
+  alert("Order deleted successfully!");
+  await loadOrders();
 }
 </script>
 
