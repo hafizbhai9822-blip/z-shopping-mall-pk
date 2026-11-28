@@ -148,34 +148,41 @@ async function login() {
 
   message.innerText = "Checking...";
 
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email, password
-  });
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email, password
+    });
 
-  if (error) {
+    if (error) {
+      message.innerText = error.message;
+      return;
+    }
+
+    const { data: admin, error: adminError } = await supabaseClient
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+
+    if (adminError || !admin) {
+      await supabaseClient.auth.signOut();
+      message.innerText = adminError
+        ? adminError.message
+        : "Admin permission not found.";
+      return;
+    }
+
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+
+    loadCategories();
+    loadProducts();
+    loadOrders();
+    loadChats();
+
+  } catch (error) {
     message.innerText = error.message;
-    return;
   }
-
-  const { data: admin, error: adminError } = await supabaseClient
-    .from("admin_users")
-    .select("user_id")
-    .eq("user_id", data.user.id)
-    .maybeSingle();
-
-  if (adminError || !admin) {
-    await supabaseClient.auth.signOut();
-    message.innerText = "Admin permission not found.";
-    return;
-  }
-
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("dashboard").style.display = "block";
-
-  loadCategories();
-  loadProducts();
-  loadOrders();
-  loadChats();
 }
 
 async function logout() {
@@ -493,7 +500,7 @@ async function deleteProduct(id) {
     return;
   }
 
-  loadProducts();
+  await loadProducts();
 }
 
 // ORDERS
@@ -574,7 +581,7 @@ async function loadOrders() {
         </select>
         <button onclick="updateOrder('${o.id}')">Update Status</button>
 
-        <button class="delete" onclick="deleteOrder(${JSON.stringify(o.id)})">
+        <button class="delete" onclick="deleteOrder('${o.id}')">
           Delete Order
         </button>
       </div>
@@ -597,7 +604,7 @@ async function updatePaymentStatus(id) {
   }
 
   alert("Payment status updated!");
-  loadOrders();
+  await loadOrders();
 }
 
 // UPDATE ORDER STATUS
@@ -615,39 +622,56 @@ async function updateOrder(id) {
   }
 
   alert("Order status updated!");
-  loadOrders();
+  await loadOrders();
 }
 
-// DELETE ORDER
+// DELETE ORDER - VERIFY ACTUAL DELETION
 async function deleteOrder(id) {
   if (!confirm("Are you sure you want to permanently delete this order and its products?")) {
     return;
   }
 
-  // First delete the products linked to this order
-  const { error: itemsError } = await supabaseClient
-    .from("order_items")
-    .delete()
-    .eq("order_id", id);
+  try {
+    // Delete order items first and verify the result
+    const { data: deletedItems, error: itemsError } = await supabaseClient
+      .from("order_items")
+      .delete()
+      .eq("order_id", id)
+      .select("order_id");
 
-  if (itemsError) {
-    alert("Could not delete order products: " + itemsError.message);
-    return;
+    if (itemsError) {
+      alert("Could not delete order products: " + itemsError.message);
+      console.error("Order items delete error:", itemsError);
+      return;
+    }
+
+    // Delete the order and ask Supabase to return its ID
+    const { data: deletedOrder, error: orderError } = await supabaseClient
+      .from("orders")
+      .delete()
+      .eq("id", id)
+      .select("id");
+
+    if (orderError) {
+      alert("Could not delete order: " + orderError.message);
+      console.error("Order delete error:", orderError);
+      return;
+    }
+
+    // A successful HTTP response can still delete zero rows
+    if (!deletedOrder || deletedOrder.length === 0) {
+      alert("Order was NOT deleted. Supabase returned zero deleted rows. Please check the DELETE policy.");
+      console.error("No order deleted. Order ID:", id);
+      return;
+    }
+
+    alert("Order deleted successfully!");
+    await loadOrders();
+
+  } catch (error) {
+    alert("Unexpected error: " + error.message);
+    console.error("Delete order exception:", error);
   }
-
-  // Then delete the order
-  const { error } = await supabaseClient
-    .from("orders")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    alert("Could not delete order: " + error.message);
-    return;
-  }
-
-  alert("Order deleted successfully!");
-  await loadOrders();
 }
 </script>
 
